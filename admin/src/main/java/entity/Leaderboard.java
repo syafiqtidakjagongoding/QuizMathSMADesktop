@@ -12,16 +12,18 @@ public class Leaderboard {
     public int id;
     public String siswa;
     public String nis;
+    public String kelas;
     public int correct_anwer;
     public int wrong_anwer;
     public int total_question;
     public int final_score;
 
      // Constructor lengkap
-    public Leaderboard(int id, String siswa, String nis, int correct_anwer, int wrong_anwer, int total_question, int final_score) {
+    public Leaderboard(int id, String siswa, String nis, String kelas, int correct_anwer, int wrong_anwer, int total_question, int final_score) {
         this.id = id;
         this.siswa = siswa;
         this.nis = nis;
+        this.kelas = kelas;
         this.correct_anwer = correct_anwer;
         this.wrong_anwer = wrong_anwer;
         this.total_question = total_question;

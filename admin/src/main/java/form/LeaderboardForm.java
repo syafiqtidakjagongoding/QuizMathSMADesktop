@@ -7,6 +7,7 @@ package form;
 import entity.Leaderboard;
 import entity.Siswa;
 import java.util.List;
+import javax.swing.JFrame;
 import javax.swing.table.DefaultTableModel;
 import repository.FinalScoreRepository;
 
@@ -24,12 +25,15 @@ public class LeaderboardForm extends javax.swing.JFrame {
     public LeaderboardForm() {
         this.fscore_repo = new FinalScoreRepository();
         initComponents();
+        setLocationRelativeTo(null); // posisi center
+       setExtendedState(JFrame.MAXIMIZED_BOTH); // otomatis full screen
+        
         getLeaderboard();
     }
     
     private void getLeaderboard() {
         String[] columnNames = {
-            "id", "nama", "nis", "correct answer", "wrong answer", "total question", "final score" 
+            "id", "nama", "nis", "kelas", "correct answer", "wrong answer", "total question", "final score" 
         };
 
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
@@ -41,6 +45,7 @@ public class LeaderboardForm extends javax.swing.JFrame {
                l.id,
                l.siswa,
                l.nis,
+               l.kelas,
                l.correct_anwer,
                l.wrong_anwer,
                l.total_question,

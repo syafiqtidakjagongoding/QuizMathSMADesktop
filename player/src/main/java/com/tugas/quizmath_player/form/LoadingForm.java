@@ -48,7 +48,7 @@ centerPanel.setLayout(new GridBagLayout()); // biar bisa taruh komponen di tenga
                 final int value = i;
                 SwingUtilities.invokeLater(() -> progressBar.setValue(value));
                 try {
-                    Thread.sleep(50); // delay simulasi loading
+                    Thread.sleep(10); // delay simulasi loading
                 } catch (InterruptedException ignored) {}
             }
             // setelah selesai, tampilkan form lain atau tutup

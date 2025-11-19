@@ -4,12 +4,9 @@
 
 package main;
 
-import form.LoginForm;
-import form.SoalForm;
 import javax.swing.UIManager;
 import com.formdev.flatlaf.FlatLightLaf;
-import form.DaftarSiswaForm;
-import form.LeaderboardForm;
+import form.LoginForm;
 /**
  *
  * @author syafiq
@@ -23,6 +20,6 @@ public class Main {
             e.printStackTrace();
         }
 
-        new LeaderboardForm().setVisible(true);
+        new LoginForm().setVisible(true);
     }
 }

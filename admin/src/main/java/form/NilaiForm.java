@@ -7,6 +7,7 @@ package form;
 import entity.Leaderboard;
 import entity.Siswa;
 import java.util.List;
+import javax.swing.JFrame;
 import javax.swing.table.DefaultTableModel;
 import repository.FinalScoreRepository;
 
@@ -23,7 +24,10 @@ public class NilaiForm extends javax.swing.JFrame {
      */
     public NilaiForm() {
         this.fscore_repo = new FinalScoreRepository();
-        initComponents();
+                initComponents();
+
+        setLocationRelativeTo(null); // posisi center
+       setExtendedState(JFrame.MAXIMIZED_BOTH); // otomatis full screen
 //        getLeaderboard();
     }
     
@@ -89,6 +93,11 @@ public class NilaiForm extends javax.swing.JFrame {
         });
 
         jButton2.setText("Leaderboard");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jButton3.setText("Daftar Siswa");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -186,10 +195,13 @@ public class NilaiForm extends javax.swing.JFrame {
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
       new DaftarSiswaForm().setVisible(true);
+            this.dispose();
+
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
       new SoalForm().setVisible(true);
+      this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
@@ -199,6 +211,11 @@ public class NilaiForm extends javax.swing.JFrame {
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 //      new NilaiForm().setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        new LeaderboardForm().setVisible(true);     
+        this.dispose();
+    }//GEN-LAST:event_jButton2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

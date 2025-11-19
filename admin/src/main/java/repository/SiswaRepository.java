@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -58,32 +57,45 @@ public class SiswaRepository {
         return result;
     }
    
-   public void deleteSiswa(int selectedId,Component parentComponent) {
-       String sql = """
-           DELETE FROM siswa WHERE id = ?         
-       """;
-       
-         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, selectedId);
-                stmt.executeUpdate();
+  public void deleteSiswa(int selectedId, Component parentComponent) {
+    String deleteFinalScore = "DELETE FROM final_score WHERE siswa_id = ?";
+    String deleteSiswa = "DELETE FROM siswa WHERE id = ?";
+
+    try (Connection conn = Database.getConnection()) {
+        conn.setAutoCommit(false); // mulai transaksi
+
+        // 1. Hapus final_score siswa
+        try (PreparedStatement stmtFinal = conn.prepareStatement(deleteFinalScore)) {
+            stmtFinal.setInt(1, selectedId);
+            stmtFinal.executeUpdate();
+        }
+
+        // 2. Hapus data siswa
+        try (PreparedStatement stmtSiswa = conn.prepareStatement(deleteSiswa)) {
+            stmtSiswa.setInt(1, selectedId);
+            stmtSiswa.executeUpdate();
+        }
+
+        conn.commit();
 
         JOptionPane.showMessageDialog(
             parentComponent,
-            "Data siswa berhasil dihapus.",
+            "Data siswa dan skor final berhasil dihapus.",
             "Sukses",
             JOptionPane.INFORMATION_MESSAGE
         );
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(
-                parentComponent,
-                "Terjadi error saat menghapus data siswa",
-                "Error",
-                JOptionPane.ERROR_MESSAGE
-            );
-            e.printStackTrace();
-        }
-   }
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(
+            parentComponent,
+            "Terjadi error saat menghapus data siswa: " + e.getMessage(),
+            "Error",
+            JOptionPane.ERROR_MESSAGE
+        );
+        e.printStackTrace();
+    }
+}
+
    
    public void updateSiswa(Siswa siswa, int kelas_id,Component parentComponent) {
     String sql = """

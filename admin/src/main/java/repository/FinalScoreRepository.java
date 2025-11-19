@@ -23,7 +23,7 @@ import javax.swing.JOptionPane;
 public class FinalScoreRepository {
     public List<Leaderboard> getAllScore(Component parentComponent) {
         String sql = """
-            SELECT f.id,s.nama,s.nis,f.correct_answer,f.wrong_answer,f.total_question,f.final_score FROM final_score f INNER JOIN siswa s ON f.siswa_id = s.id ORDER BY f.final_score DESC
+            SELECT f.id,s.nama,k.kelas, s.nis,f.correct_answer,f.wrong_answer,f.total_question,f.final_score FROM final_score f INNER JOIN siswa s ON f.siswa_id = s.id INNER JOIN kelas k ON s.kelas_id = k.id ORDER BY f.final_score DESC
         """;
         List<Leaderboard> leaderboard = new ArrayList<>();
          try (Connection conn = Database.getConnection();
@@ -34,12 +34,13 @@ public class FinalScoreRepository {
                 int id = rs.getInt("id");
                 String siswa = rs.getString("nama");
                 String nis = rs.getString("nis");
+                String kelas = rs.getString("kelas");
                 int correct_answer = rs.getInt("correct_answer");
                 int wrong_answer = rs.getInt("wrong_answer");
                 int total_question = rs.getInt("total_question");
                 int final_score = rs.getInt("final_score");
                 
-              Leaderboard lboard = new Leaderboard(id,siswa,nis, correct_answer,wrong_answer,total_question,final_score);
+              Leaderboard lboard = new Leaderboard(id,siswa,nis,kelas, correct_answer,wrong_answer,total_question,final_score);
               leaderboard.add(lboard);
             }
 

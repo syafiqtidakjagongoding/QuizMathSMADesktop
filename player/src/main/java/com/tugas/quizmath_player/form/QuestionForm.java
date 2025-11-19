@@ -79,22 +79,20 @@ public class QuestionForm extends javax.swing.JFrame {
             this.dispose();
             return;
         }
+        int number = currentIndex + 1;
+        noSoal.setText(Integer.toString(number));
 
+        
         int questionId = randomizedIds.get(currentIndex);
         this.currentQuestion = question_repo.getQuestionById(questionId);
+         int siswaId = Session.getCurrentSiswaId();
+        
+  
 
         if (currentQuestion != null) {
         questionTextArea.setText(currentQuestion.question_text);
         levelLabel.setText("Level : " + currentQuestion.level);
 
-//        checkBoxA.setText(currentQuestion.answers.get(0).answer);
-//        checkBoxB.setText(currentQuestion.answers.get(1).answer);
-//        checkBoxC.setText(currentQuestion.answers.get(2).answer);
-//        checkBoxD.setText(currentQuestion.answers.get(3).answer);
-//        
-
-       
-        
        if (currentQuestion.image_path == null || currentQuestion.image_path.equals("")) {
             questionImgLabel.setIcon(null);  // hapus gambar
             questionImgLabel.setText("");    // hapus text
@@ -118,18 +116,21 @@ public class QuestionForm extends javax.swing.JFrame {
         setAnswerToLabel(answerCImg, currentQuestion.answers.get(2).image_answer,currentQuestion.answers.get(2).answer);
         setAnswerToLabel(answerDImg, currentQuestion.answers.get(3).image_answer,currentQuestion.answers.get(3).answer);
 
-        // reset centang
-        checkBoxA.setSelected(false);
-        checkBoxB.setSelected(false);
-        checkBoxC.setSelected(false);
-        checkBoxD.setSelected(false);
+         List<String> previous = answer_repo.getSelectedAnswers(siswaId, questionId);
+
+        checkBoxA.setSelected(previous.contains("A"));
+        checkBoxB.setSelected(previous.contains("B"));
+        checkBoxC.setSelected(previous.contains("C"));
+        checkBoxD.setSelected(previous.contains("D"));
 
         // set behavior tergantung tipe soal
         if ("SINGLE_CHOICES".equalsIgnoreCase(currentQuestion.answer_type)) {
             setupSingleChoiceMode();
-        } else {
+        } else if ("MULTIPLE_CHOICES".equalsIgnoreCase(currentQuestion.answer_type)) {
             setupMultipleChoiceMode();
         }
+        
+      
     }
     }
     
@@ -210,16 +211,17 @@ public class QuestionForm extends javax.swing.JFrame {
     // Hapus dulu jawaban lama untuk soal ini biar bersih
     answer_repo.deleteAnswerByQuestion(currentQuestion.id, siswaId);
 
+    
     if ("SINGLE_CHOICES".equalsIgnoreCase(currentQuestion.answer_type)) {
         // Single choice: hanya 1 jawaban
         Integer selectedAnswerId = null;
-
+        
         if (checkBoxA.isSelected()) selectedAnswerId = currentQuestion.answers.get(0).id;
         if (checkBoxB.isSelected()) selectedAnswerId = currentQuestion.answers.get(1).id;
         if (checkBoxC.isSelected()) selectedAnswerId = currentQuestion.answers.get(2).id;
         if (checkBoxD.isSelected()) selectedAnswerId = currentQuestion.answers.get(3).id;
-
         if (selectedAnswerId != null) {
+            
             answer_repo.upsertAnswer(selectedAnswerId, siswaId);
         }
     } 
@@ -286,10 +288,9 @@ public class QuestionForm extends javax.swing.JFrame {
         questionImgLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         questionTextArea = new javax.swing.JTextArea();
+        noSoal = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
         jPanel10 = new javax.swing.JPanel();
-        checkBoxD = new javax.swing.JCheckBox();
-        answerDImg = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jPanel9 = new javax.swing.JPanel();
         checkBoxA = new javax.swing.JCheckBox();
@@ -298,6 +299,8 @@ public class QuestionForm extends javax.swing.JFrame {
         checkBoxB = new javax.swing.JCheckBox();
         answerCImg = new javax.swing.JLabel();
         levelLabel = new javax.swing.JLabel();
+        answerDImg = new javax.swing.JLabel();
+        checkBoxD = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
@@ -392,20 +395,28 @@ public class QuestionForm extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        noSoal.setText("jLabel1");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(78, 78, 78)
+                .addGap(30, 30, 30)
+                .addComponent(noSoal)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(noSoal)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -416,31 +427,15 @@ public class QuestionForm extends javax.swing.JFrame {
             }
         });
 
-        checkBoxD.setText("D");
-        checkBoxD.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkBoxDActionPerformed(evt);
-            }
-        });
-
-        answerDImg.setText("jLabel2");
-
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel10Layout.createSequentialGroup()
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(checkBoxD, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(answerDImg, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE))
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addGap(0, 192, Short.MAX_VALUE)
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel10Layout.createSequentialGroup()
-                .addComponent(checkBoxD, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(4, 4, 4)
-                .addComponent(answerDImg, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGap(0, 0, Short.MAX_VALUE)
         );
 
         jButton1.setText("Next");
@@ -508,6 +503,15 @@ public class QuestionForm extends javax.swing.JFrame {
 
         levelLabel.setText("jLabel1");
 
+        answerDImg.setText("jLabel2");
+
+        checkBoxD.setText("D");
+        checkBoxD.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkBoxDActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
@@ -525,8 +529,13 @@ public class QuestionForm extends javax.swing.JFrame {
                         .addGap(231, 231, 231)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel8Layout.createSequentialGroup()
+                                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(checkBoxD, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE)
+                                    .addComponent(answerDImg, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -536,7 +545,7 @@ public class QuestionForm extends javax.swing.JFrame {
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(levelLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(233, Short.MAX_VALUE))
+                .addGap(233, 233, 233))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -556,6 +565,10 @@ public class QuestionForm extends javax.swing.JFrame {
                             .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(31, 31, 31)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(jPanel8Layout.createSequentialGroup()
+                                .addComponent(checkBoxD, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(answerDImg, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(jPanel8Layout.createSequentialGroup()
@@ -563,7 +576,7 @@ public class QuestionForm extends javax.swing.JFrame {
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(300, Short.MAX_VALUE))
+                .addContainerGap(236, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanel8);
@@ -573,8 +586,9 @@ public class QuestionForm extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 21, Short.MAX_VALUE)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1359, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(15, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1359, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -634,6 +648,7 @@ public class QuestionForm extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel levelLabel;
+    private javax.swing.JLabel noSoal;
     private javax.swing.JLabel questionImgLabel;
     private javax.swing.JProgressBar questionProgress;
     private javax.swing.JTextArea questionTextArea;

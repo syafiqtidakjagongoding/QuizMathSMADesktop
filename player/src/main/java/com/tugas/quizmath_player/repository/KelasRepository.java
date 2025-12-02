@@ -4,8 +4,10 @@
  */
 package com.tugas.quizmath_player.repository;
 
-import database.Database;
-import entity.Kelas;
+
+import com.tugas.quizmath_player.entity.Kelas;
+import com.tugas.quizmath_player.database.Database;
+
 import java.awt.Component;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

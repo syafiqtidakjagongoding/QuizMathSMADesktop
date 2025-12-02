@@ -1,246 +1,295 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package com.tugas.quizmath_player.form;
 
+import javax.swing.*;
 
+import com.tugas.quizmath_player.constant.Errors;
+import com.tugas.quizmath_player.entity.Admin;
+import com.tugas.quizmath_player.entity.DataSiswa;
+import com.tugas.quizmath_player.repository.AdminRepository;
 import com.tugas.quizmath_player.repository.DataSiswaRepository;
-import entity.DataSiswa;
-import constant.Errors;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import java.awt.*;
+import java.awt.event.*;
 
-/**
- *
- * @author syafiq
- */
-public class LoginForm extends javax.swing.JFrame {
+public class LoginForm extends JFrame {
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JComboBox<String> roleComboBox;
+    private JButton loginButton;
+    private JButton exitButton;
+    private AdminRepository admin_repo;
     private DataSiswaRepository datasiswa_repo;
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(LoginForm.class.getName());
 
-    /**
-     * Creates new form RegisterForm
-     */
     public LoginForm() {
+        setTitle("Quiz Application - Login");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setUndecorated(false);
         this.datasiswa_repo = new DataSiswaRepository();
-        initComponents();
-        setLocationRelativeTo(null); // posisi center
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // otomatis full screen
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.admin_repo = new AdminRepository();
+
+        // Panel utama dengan gradient background
+        JPanel mainPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                int w = getWidth();
+                int h = getHeight();
+                Color color1 = new Color(41, 128, 185);
+                Color color2 = new Color(109, 213, 250);
+                GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, w, h);
+            }
+        };
+        mainPanel.setLayout(new GridBagLayout());
+
+        // Panel login form
+        JPanel loginPanel = new JPanel();
+        loginPanel.setBackground(Color.WHITE);
+        loginPanel.setPreferredSize(new Dimension(450, 650));
+        loginPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+                BorderFactory.createEmptyBorder(40, 50, 40, 50)));
+        loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
+
+        // Icon/Logo
+        JLabel iconLabel = new JLabel("😵‍💫");
+        iconLabel.setFont(new Font("Open Sans", Font.PLAIN, 80));
+        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginPanel.add(iconLabel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Title
+        JLabel titleLabel = new JLabel("Fuse Math");
+        titleLabel.setFont(new Font("Open Sans", Font.BOLD, 32));
+        titleLabel.setForeground(new Color(52, 73, 94));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginPanel.add(titleLabel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        // Subtitle
+        JLabel subtitleLabel = new JLabel("Silakan login untuk melanjutkan");
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subtitleLabel.setForeground(new Color(127, 140, 141));
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginPanel.add(subtitleLabel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        // Username field
+        JPanel usernameLabelPanel = new JPanel();
+        usernameLabelPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        usernameLabelPanel.setBackground(Color.WHITE);
+
+        JLabel usernameLabel = new JLabel("Username");
+        usernameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        usernameLabel.setForeground(new Color(52, 73, 94));
+
+        usernameLabelPanel.add(usernameLabel);
+        loginPanel.add(usernameLabelPanel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        usernameField = new JTextField(20);
+        usernameField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        usernameField.setMaximumSize(new Dimension(350, 45));
+        // usernameField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        usernameField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
+        loginPanel.add(usernameField);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Password field
+        JPanel passwordLabelPanel = new JPanel();
+        passwordLabelPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        passwordLabelPanel.setBackground(Color.WHITE);
+
+        JLabel passwordLabel = new JLabel("Password");
+        passwordLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        passwordLabel.setForeground(new Color(52, 73, 94));
+
+        passwordLabelPanel.add(passwordLabel);
+        loginPanel.add(passwordLabelPanel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        passwordField = new JPasswordField(20);
+        passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        passwordField.setMaximumSize(new Dimension(350, 45));
+        passwordField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
+        loginPanel.add(passwordField);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Role field
+        JPanel roleLabelPanel = new JPanel();
+        roleLabelPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        roleLabelPanel.setBackground(Color.WHITE);
+
+        JLabel roleLabel = new JLabel("Role");
+        roleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        roleLabel.setForeground(new Color(52, 73, 94));
+
+        roleLabelPanel.add(roleLabel);
+        loginPanel.add(roleLabelPanel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        String[] roles = { "Admin", "Siswa" };
+        roleComboBox = new JComboBox<>(roles);
+        roleComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        roleComboBox.setMaximumSize(new Dimension(350, 45));
+        roleComboBox.setBackground(Color.WHITE);
+        roleComboBox.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        loginPanel.add(roleComboBox);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 35)));
+
+        // Login button
+        JPanel loginBtnPanel = new JPanel();
+        loginBtnPanel.setLayout(new BoxLayout(loginBtnPanel, BoxLayout.X_AXIS));
+        loginBtnPanel.setBackground(Color.WHITE);
+
+        loginButton = new JButton("Login");
+        loginButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setBackground(new Color(41, 128, 185));
+        loginButton.setFocusPainted(false);
+        loginButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        loginButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        loginButton.setBorderPainted(false);
+        loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        loginButton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                loginButton.setBackground(new Color(52, 152, 219));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                loginButton.setBackground(new Color(41, 128, 185));
+            }
+        });
+        loginButton.addActionListener(e -> handleLogin());
+        loginBtnPanel.add(loginButton);
+        loginPanel.add(loginBtnPanel);
+
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        // Exit button
+        JPanel exitBtnPanel = new JPanel();
+        exitBtnPanel.setLayout(new BoxLayout(exitBtnPanel, BoxLayout.X_AXIS));
+        exitBtnPanel.setBackground(Color.WHITE);
+
+        exitButton = new JButton("Keluar");
+        exitButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        exitButton.setForeground(new Color(127, 140, 141));
+        exitButton.setBackground(Color.WHITE);
+        exitButton.setFocusPainted(false);
+        exitButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        exitButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        exitButton.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199), 1));
+        exitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        exitButton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                exitButton.setBackground(new Color(245, 245, 245));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                exitButton.setBackground(Color.WHITE);
+            }
+        });
+        exitButton.addActionListener(e -> System.exit(0));
+        exitBtnPanel.add(exitButton);
+        loginPanel.add(exitBtnPanel);
+
+        mainPanel.add(loginPanel);
+        add(mainPanel);
+
+        // Enter key action
+        getRootPane().setDefaultButton(loginButton);
+
+        setVisible(true);
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private void handleLogin() {
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        String role = (String) roleComboBox.getSelectedItem();
 
-        jPanel3 = new javax.swing.JPanel();
-        jPanel1 = new javax.swing.JPanel();
-        namaInput = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        passwordInput = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jButton2 = new javax.swing.JButton();
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Username dan password tidak boleh kosong!",
+                    "Login Gagal",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setUndecorated(true);
-
-        jPanel3.setBackground(new java.awt.Color(125, 168, 198));
-
-        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
-
-        namaInput.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true));
-        namaInput.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                namaInputActionPerformed(evt);
-            }
-        });
-
-        jLabel3.setFont(new java.awt.Font("sansserif", 1, 14)); // NOI18N
-        jLabel3.setText("Password :");
-
-        jLabel4.setFont(new java.awt.Font("sansserif", 1, 14)); // NOI18N
-        jLabel4.setText("Username :");
-
-        passwordInput.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true));
-        passwordInput.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                passwordInputActionPerformed(evt);
-            }
-        });
-
-        jButton1.setBackground(new java.awt.Color(74, 123, 190));
-        jButton1.setFont(new java.awt.Font("sansserif", 1, 14)); // NOI18N
-        jButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jButton1.setText("Masuk");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-
-        jPanel2.setBackground(new java.awt.Color(255, 255, 255));
-
-        jLabel1.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        jLabel1.setText("Login Siswa");
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap(16, Short.MAX_VALUE)
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-
-        jButton2.setBackground(new java.awt.Color(74, 123, 190));
-        jButton2.setFont(new java.awt.Font("sansserif", 1, 14)); // NOI18N
-        jButton2.setForeground(new java.awt.Color(255, 255, 255));
-        jButton2.setText("Kembali");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(70, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(namaInput, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(426, 426, 426))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(323, 323, 323))
-                    .addComponent(passwordInput, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 2, Short.MAX_VALUE)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(100, Short.MAX_VALUE))
-            .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(54, 54, 54)
-                .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(namaInput, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(27, 27, 27)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(passwordInput, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(70, 70, 70))
-        );
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap(200, Short.MAX_VALUE)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(200, Short.MAX_VALUE))
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap(89, Short.MAX_VALUE)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(89, Short.MAX_VALUE))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void passwordInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_passwordInputActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_passwordInputActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-    
-           DataSiswa formValues = new DataSiswa(namaInput.getText(), passwordInput.getText());
-           Errors result = formValues.validate();
-           int confirmDialog = JOptionPane.showConfirmDialog(
-                null,
-                "Apakah data sudah benar ?",
-                "Konfirmasi data siswa",
-                JOptionPane.OK_CANCEL_OPTION
-            );
+        if (role.equals("Siswa")) {
+            DataSiswa formValues = new DataSiswa(username, password);
+            Errors result = formValues.validate();
+            int confirmDialog = JOptionPane.showConfirmDialog(
+                    null,
+                    "Apakah data sudah benar ?",
+                    "Konfirmasi data siswa",
+                    JOptionPane.OK_CANCEL_OPTION);
 
             if (confirmDialog == JOptionPane.OK_OPTION) {
                 if (result.isError) {
                     JOptionPane.showMessageDialog(null, result.message, "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
-                   boolean isLoggedIn = datasiswa_repo.loginSiswa(formValues, this.rootPane);
-                   if (isLoggedIn) {
-                   this.dispose();
-                   new OpeningForm().setVisible(true);
-                   }
-                   return;
+                   
+                    DataSiswa res = datasiswa_repo.loginSiswa(formValues, this.rootPane);
+                    if (res != null) {
+                        // QuizLevelSelection quiz_selection = new QuizLevelSelection();
+                        // quiz_selection.setVisible(true);
+                        // (String nama, String nis, String absen, String kelas, String jurusan)
+                        new OpeningForm(res.name, res.nis, res.absen, res.kelas, res.jurusan);
+                        this.dispose();
+
+                    }
+                    return;
                 }
-          }
+            }
+        }
+        if (role.equals("Admin")) {
+            Admin admin = new Admin(username, password);
+            Errors err = admin.validate();
+            if (err.isError) {
+                JOptionPane.showMessageDialog(this, err.message, err.title, JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-    }//GEN-LAST:event_jButton1ActionPerformed
+            // if (admin.username.equals("admin") && admin.password.equals("admin123")) {
+            boolean checkLogin = this.admin_repo.checkLogin(admin);
+            // boolean checkLogin = true;
+            if (checkLogin) {
+                new SoalForm().setVisible(true);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Username atau password tidak ditemukan", "User not found",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            // }
+        }
+    }
 
-    private void namaInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_namaInputActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_namaInputActionPerformed
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-       new LoginPicker().setVisible(true);
-       this.dispose();
-    }//GEN-LAST:event_jButton2ActionPerformed
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JTextField namaInput;
-    private javax.swing.JTextField passwordInput;
-    // End of variables declaration//GEN-END:variables
+        SwingUtilities.invokeLater(() -> new LoginForm());
+    }
 }

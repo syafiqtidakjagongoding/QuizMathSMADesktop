@@ -4,7 +4,7 @@
  */
 package com.tugas.quizmath_player.repository;
 
-import database.Database;
+import com.tugas.quizmath_player.database.Database;
 import com.tugas.quizmath_player.entity.Admin;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

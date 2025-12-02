@@ -1,4 +1,4 @@
-package constant;
+package com.tugas.quizmath_player.constant;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license

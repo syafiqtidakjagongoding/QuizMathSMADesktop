@@ -15,6 +15,12 @@ PLAYER_JAR = $(PLAYER_DIR)/target/quizmath_player-1.0-SNAPSHOT.jar
 # =====================================
 .PHONY: all clean admin player
 
+player:
+	@echo ">>> Building Player Project..."
+	@cd $(PLAYER_DIR) && $(MVN) clean package -q
+	@echo ">>> Running Player..."
+	@$(JAVA) -jar $(PLAYER_JAR)
+
 all:
 	@echo "Usage:"
 	@echo "  make player  -> build & run Player app"
@@ -23,11 +29,7 @@ all:
 # =====================================
 # Build & Run Player
 # =====================================
-player:
-	@echo ">>> Building Player Project..."
-	@cd $(PLAYER_DIR) && $(MVN) clean package -q
-	@echo ">>> Running Player..."
-	@$(JAVA) -jar $(PLAYER_JAR)
+
 
 # =====================================
 # Clean semua target

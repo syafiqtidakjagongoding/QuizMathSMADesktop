@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package entity;
+package com.tugas.quizmath_player.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +26,8 @@ public class QuestionId {
         int index = rand.nextInt(ids.size());
         return ids.remove(index); // remove sekaligus return id
     }
-    
-      // Ambil semua id tersisa
+
+    // Ambil semua id tersisa
     public List<Integer> getIds() {
         return new ArrayList<>(ids); // return copy biar aman
     }
@@ -37,4 +37,3 @@ public class QuestionId {
         return !ids.isEmpty();
     }
 }
-

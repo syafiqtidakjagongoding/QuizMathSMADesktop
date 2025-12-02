@@ -29,4 +29,7 @@ public class Siswa {
         this.kelas = kelas;
         this.jurusan = jurusan;
     }
+    
+  
+
 }

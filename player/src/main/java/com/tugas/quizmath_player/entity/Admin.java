@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.tugas.quizmath_player.entity;
-import constant.Errors;
+import com.tugas.quizmath_player.constant.Errors;
 /**
  *
  * @author syafiq

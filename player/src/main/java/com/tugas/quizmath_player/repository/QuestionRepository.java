@@ -6,16 +6,18 @@ package com.tugas.quizmath_player.repository;
 
 import com.tugas.quizmath_player.entity.Answer;
 import com.tugas.quizmath_player.entity.QuestionManipulation;
-import entity.QuestionId;
-import entity.Question;
-import entity.OptionAnswer;
+import com.tugas.quizmath_player.entity.QuestionId;
+import com.tugas.quizmath_player.entity.Question;
+import com.tugas.quizmath_player.entity.OptionAnswer;
+import com.tugas.quizmath_player.database.Database;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import database.Database;
+
 import java.awt.Component;
 import java.sql.Statement;
 import javax.swing.JOptionPane;

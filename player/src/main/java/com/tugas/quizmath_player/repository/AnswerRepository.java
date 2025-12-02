@@ -2,9 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package repository;
+package com.tugas.quizmath_player.repository;
 
-import database.Database;
+
+import com.tugas.quizmath_player.database.Database;
+
 import java.util.List;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

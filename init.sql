@@ -134,13 +134,13 @@ INSERT INTO siswa (nama, kelas_id, username, password, nis, no_absen) VALUES
 -- INSERT DATA QUESTION
 -- =========================
 INSERT INTO question (question_text, answer_type, level, topic) VALUES
-('Sebuah meja berbentuk persegi panjang memiliki panjang 150 cm dan lebar 80 cm. Berapakah luas permukaan meja tersebut dalam cm^2?', 'SINGLE_CHOICES', 'mudah', 'Persegi Panjang'), -- question_id = 1
-('Jika keliling sebuah lapangan berbentuk persegi adalah 60 meter. Berapakah panjang satu sisi lapangan tersebut?', 'SINGLE_CHOICES', 'mudah', 'Persegi'), -- question_id = 2
-('Sebuah kotak mainan berbentuk kubus memiliki panjang rusuk 5 cm. Berapakah volume kotak mainan tersebut dalam cm^3?', 'SINGLE_CHOICES', 'mudah', 'Kubus'), -- question_id = 3
-('Sebuah segitiga siku-siku memiliki alas 10 cm dan tinggi 6 cm. Berapakah luas segitiga tersebut?', 'SINGLE_CHOICES', 'mudah', 'Segitiga'), -- question_id = 4
+('Sebuah meja berbentuk persegi panjang memiliki panjang 150 cm dan lebar 80 cm. Berapakah luas permukaan meja tersebut dalam cm^2?', 'SINGLE_CHOICES', 'MUDAH', 'Persegi Panjang'), -- question_id = 1
+('Jika keliling sebuah lapangan berbentuk persegi adalah 60 meter. Berapakah panjang satu sisi lapangan tersebut?', 'SINGLE_CHOICES', 'MUDAH', 'Persegi'), -- question_id = 2
+('Sebuah kotak mainan berbentuk kubus memiliki panjang rusuk 5 cm. Berapakah volume kotak mainan tersebut dalam cm^3?', 'SINGLE_CHOICES', 'MUDAH', 'Kubus'), -- question_id = 3
+('Sebuah segitiga siku-siku memiliki alas 10 cm dan tinggi 6 cm. Berapakah luas segitiga tersebut?', 'SINGLE_CHOICES', 'MUDAH', 'Segitiga'), -- question_id = 4
 ('Sebuah roda sepeda memiliki diameter 70 cm. Berapakah keliling roda tersebut? (Gunakan π = 22/7)', 'SINGLE_CHOICES', 'sedang', 'Lingkaran'), -- question_id = 5
 ('Sebuah trapesium memiliki panjang sisi sejajar 8 cm dan 12 cm, serta tinggi 5 cm. Berapakah luas trapesium tersebut?', 'SINGLE_CHOICES', 'sedang', 'Trapesium'), -- question_id = 6
-('Sebuah lapangan voli berukuran panjang 18 m dan lebar 9 m. Berapakah keliling lapangan tersebut?', 'SINGLE_CHOICES', 'mudah', 'Persegi Panjang'), -- question_id = 7
+('Sebuah lapangan voli berukuran panjang 18 m dan lebar 9 m. Berapakah keliling lapangan tersebut?', 'SINGLE_CHOICES', 'MUDAH', 'Persegi Panjang'), -- question_id = 7
 ('Sebuah akuarium berbentuk balok memiliki panjang 10 dm, lebar 5 dm, dan tinggi 6 dm. Berapakah volume akuarium tersebut?', 'SINGLE_CHOICES', 'sedang', 'Balok'), -- question_id = 8
 ('Diagonal-diagonal pada belah ketupat berturut-turut adalah 16 cm dan 12 cm. Berapakah luas belah ketupat tersebut?', 'SINGLE_CHOICES', 'sedang', 'Belah Ketupat'), -- question_id = 9
 ('Jika sebuah piring memiliki jari-jari 10 cm, berapakah luas piring tersebut? (Gunakan π = 3.14)', 'SINGLE_CHOICES', 'sedang', 'Lingkaran'); -- question_id = 10

@@ -4,15 +4,14 @@
  */
 package com.tugas.quizmath_player.repository;
 
-import com.tugas.quizmath_player.entity.Leaderboard;
-
 import com.tugas.quizmath_player.database.Database;
+import com.tugas.quizmath_player.entity.FinalScore;
+import com.tugas.quizmath_player.entity.Leaderboard;
+import com.tugas.quizmath_player.entity.Siswa;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import java.awt.Component;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -22,36 +21,23 @@ import javax.swing.JOptionPane;
  * @author syafiq
  */
 public class FinalScoreRepository {
+
     public void calculateScore(Component parentComponent, int siswaId) {
-        String sqlBenar = """
-                    SELECT COUNT(*) AS total_benar
-                    FROM siswa_answer sa
-                    INNER JOIN options_answer oa ON sa.question_answer_id = oa.id
-                    WHERE oa.correct = 1 AND sa.siswa_id = ?
-                """;
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
 
-        String sqlTotalSoal = "SELECT COUNT(*) AS total_soal FROM question";
+            // 1. Calculate total benar
+            String hqlBenar = "SELECT COUNT(sa) FROM SiswaAnswer sa WHERE sa.siswa.id = :sid AND sa.optionAnswer.correct = true";
+            Long totalBenarLong = session.createQuery(hqlBenar, Long.class)
+                    .setParameter("sid", siswaId)
+                    .uniqueResult();
+            int totalBenar = totalBenarLong != null ? totalBenarLong.intValue() : 0;
 
-        try (Connection conn = Database.getConnection();
-                PreparedStatement stmtBenar = conn.prepareStatement(sqlBenar);
-                PreparedStatement stmtTotal = conn.prepareStatement(sqlTotalSoal)) {
-
-            // set siswaId untuk query jawaban benar
-            stmtBenar.setInt(1, siswaId);
-
-            int totalBenar = 0;
-            try (ResultSet rsBenar = stmtBenar.executeQuery()) {
-                if (rsBenar.next()) {
-                    totalBenar = rsBenar.getInt("total_benar");
-                }
-            }
-
-            int totalSoal = 0;
-            try (ResultSet rsTotal = stmtTotal.executeQuery()) {
-                if (rsTotal.next()) {
-                    totalSoal = rsTotal.getInt("total_soal");
-                }
-            }
+            // 2. Calculate total soal
+            String hqlTotal = "SELECT COUNT(q) FROM Question q";
+            Long totalSoalLong = session.createQuery(hqlTotal, Long.class).uniqueResult();
+            int totalSoal = totalSoalLong != null ? totalSoalLong.intValue() : 0;
 
             if (totalSoal == 0) {
                 JOptionPane.showMessageDialog(
@@ -65,24 +51,25 @@ public class FinalScoreRepository {
             int totalSalah = totalSoal - totalBenar;
             double nilaiAkhir = ((double) totalBenar / totalSoal) * 100.0;
 
-            String sqlInsertFinal = """
-                        INSERT INTO final_score (siswa_id, correct_answer, wrong_answer, total_question, final_score)
-                        VALUES (?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE
-                            correct_answer = VALUES(correct_answer),
-                            wrong_answer = VALUES(wrong_answer),
-                            total_question = VALUES(total_question),
-                            final_score = VALUES(final_score)
-                    """;
+            // 3. Insert or Update FinalScore
+            String hqlFind = "FROM FinalScore fs WHERE fs.siswa.id = :sid";
+            FinalScore finalScore = session.createQuery(hqlFind, FinalScore.class)
+                    .setParameter("sid", siswaId)
+                    .uniqueResult();
 
-            try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertFinal)) {
-                stmtInsert.setInt(1, siswaId);
-                stmtInsert.setInt(2, totalBenar);
-                stmtInsert.setInt(3, totalSalah);
-                stmtInsert.setInt(4, totalSoal);
-                stmtInsert.setDouble(5, nilaiAkhir);
-                stmtInsert.executeUpdate();
+            if (finalScore == null) {
+                Siswa siswa = session.get(Siswa.class, siswaId);
+                finalScore = new FinalScore(siswa, totalBenar, totalSalah, totalSoal, nilaiAkhir);
+                session.persist(finalScore);
+            } else {
+                finalScore.setCorrectAnswer(totalBenar);
+                finalScore.setWrongAnswer(totalSalah);
+                finalScore.setTotalQuestion(totalSoal);
+                finalScore.setFinalScore(nilaiAkhir);
+                session.merge(finalScore);
             }
+
+            tx.commit();
 
             JOptionPane.showMessageDialog(
                     parentComponent,
@@ -90,40 +77,45 @@ public class FinalScoreRepository {
                     "Soal terkirim",
                     JOptionPane.INFORMATION_MESSAGE);
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
             JOptionPane.showMessageDialog(
                     parentComponent,
                     "Terjadi kesalahan saat menghitung skor:\n" + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
     public void insertScore(Component parentComponent, int siswaId, int correctAnswer, int totalQuestion) {
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
 
-        int wrongAnswer = totalQuestion - correctAnswer;
-        double finalScore = ((double) correctAnswer / totalQuestion) * 100.0;
+            int wrongAnswer = totalQuestion - correctAnswer;
+            double finalScoreValue = ((double) correctAnswer / totalQuestion) * 100.0;
 
-        String sqlInsertFinal = """
-                INSERT INTO final_score (siswa_id, correct_answer, wrong_answer, total_question, final_score)
-                VALUES (?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    correct_answer = VALUES(correct_answer),
-                    wrong_answer = VALUES(wrong_answer),
-                    total_question = VALUES(total_question),
-                    final_score = VALUES(final_score)
-                """;
+            // Insert or Update FinalScore
+            String hqlFind = "FROM FinalScore fs WHERE fs.siswa.id = :sid";
+            FinalScore finalScore = session.createQuery(hqlFind, FinalScore.class)
+                    .setParameter("sid", siswaId)
+                    .uniqueResult();
 
-        try (Connection conn = Database.getConnection();
-                PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertFinal)) {
+            if (finalScore == null) {
+                Siswa siswa = session.get(Siswa.class, siswaId);
+                finalScore = new FinalScore(siswa, correctAnswer, wrongAnswer, totalQuestion, finalScoreValue);
+                session.persist(finalScore);
+            } else {
+                finalScore.setCorrectAnswer(correctAnswer);
+                finalScore.setWrongAnswer(wrongAnswer);
+                finalScore.setTotalQuestion(totalQuestion);
+                finalScore.setFinalScore(finalScoreValue);
+                session.merge(finalScore);
+            }
 
-            stmtInsert.setInt(1, siswaId);
-            stmtInsert.setInt(2, correctAnswer);
-            stmtInsert.setInt(3, wrongAnswer);
-            stmtInsert.setInt(4, totalQuestion);
-            stmtInsert.setDouble(5, finalScore);
-
-            stmtInsert.executeUpdate();
+            tx.commit();
 
             JOptionPane.showMessageDialog(
                     parentComponent,
@@ -131,47 +123,44 @@ public class FinalScoreRepository {
                     "Berhasil",
                     JOptionPane.INFORMATION_MESSAGE);
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
             JOptionPane.showMessageDialog(
                     parentComponent,
                     "Terjadi kesalahan saat menyimpan skor:\n" + e.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
     public List<Leaderboard> getAllScore(Component parentComponent) {
-        String sql = """
-                    SELECT f.id,s.nama,k.kelas, s.nis,f.correct_answer,f.wrong_answer,f.total_question,f.final_score FROM final_score f INNER JOIN siswa s ON f.siswa_id = s.id INNER JOIN kelas k ON s.kelas_id = k.id ORDER BY f.final_score DESC
-                """;
         List<Leaderboard> leaderboard = new ArrayList<>();
-        try (Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+        try (Session session = Database.getSessionFactory().openSession()) {
+            // Join FinalScore -> Siswa -> Kelas
+            // Sort by finalScore DESC
+            String hql = "FROM FinalScore fs JOIN FETCH fs.siswa s JOIN FETCH s.kelas k ORDER BY fs.finalScore DESC";
+            List<FinalScore> scores = session.createQuery(hql, FinalScore.class).list();
 
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String siswa = rs.getString("nama");
-                String nis = rs.getString("nis");
-                String kelas = rs.getString("kelas");
-                int correct_answer = rs.getInt("correct_answer");
-                int wrong_answer = rs.getInt("wrong_answer");
-                int total_question = rs.getInt("total_question");
-                int final_score = rs.getInt("final_score");
-
-                Leaderboard lboard = new Leaderboard(id, siswa, nis, kelas, correct_answer, wrong_answer,
-                        total_question,
-                        final_score);
+            for (FinalScore fs : scores) {
+                Leaderboard lboard = new Leaderboard(
+                        fs.getId(), // or fs.getSiswa().getId()? Original used fs.id (rs.getInt("id"))
+                        fs.getSiswa().getNama(),
+                        fs.getSiswa().getNis(),
+                        fs.getSiswa().getNamaKelas(), // using helper in Siswa
+                        fs.getCorrectAnswer(),
+                        fs.getWrongAnswer(),
+                        fs.getTotalQuestion(),
+                        (int) fs.getFinalScore() // Cast to int as Leaderboard expects int
+                );
                 leaderboard.add(lboard);
             }
-
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(parentComponent, "Gagal mengambil data final score: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
-
         return leaderboard;
     }
-
 }

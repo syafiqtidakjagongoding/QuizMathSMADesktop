@@ -62,54 +62,6 @@ public class QuizResultForm extends JFrame {
 		resultPanel.add(levelLabel);
 		resultPanel.add(Box.createVerticalStrut(40));
 
-		// Score besar dengan lingkaran
-		JPanel scorePanel = new JPanel() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2d = (Graphics2D) g;
-				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-				// Tentukan warna berdasarkan score
-				Color scoreColor;
-				if (score >= 80) {
-					scoreColor = new Color(46, 204, 113); // Hijau
-				} else if (score >= 60) {
-					scoreColor = new Color(241, 196, 15); // Kuning
-				} else {
-					scoreColor = new Color(231, 76, 60); // Merah
-				}
-
-				// Gambar lingkaran
-				int diameter = 200;
-				int x = (getWidth() - diameter) / 2;
-				int y = (getHeight() - diameter) / 2;
-
-				// Shadow
-				g2d.setColor(new Color(0, 0, 0, 30));
-				g2d.fillOval(x + 5, y + 5, diameter, diameter);
-
-				// Lingkaran utama
-				g2d.setColor(scoreColor);
-				g2d.fillOval(x, y, diameter, diameter);
-
-				// Teks score
-				g2d.setColor(Color.WHITE);
-				g2d.setFont(new Font("Arial", Font.BOLD, 72));
-				String scoreText = score + "%";
-				FontMetrics fm = g2d.getFontMetrics();
-				int textX = (getWidth() - fm.stringWidth(scoreText)) / 2;
-				int textY = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
-				g2d.drawString(scoreText, textX, textY);
-			}
-		};
-		scorePanel.setPreferredSize(new Dimension(250, 250));
-		scorePanel.setMaximumSize(new Dimension(250, 250));
-		scorePanel.setOpaque(false);
-		scorePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		resultPanel.add(scorePanel);
-		resultPanel.add(Box.createVerticalStrut(40));
 
 		// Detail hasil
 		JPanel detailsPanel = new JPanel();

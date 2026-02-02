@@ -174,12 +174,12 @@ public class OpeningForm extends JFrame {
         contentPanel.add(buttonPanel);
 
         // Info tambahan di bawah
-        contentPanel.add(Box.createVerticalStrut(30));
-        JLabel infoLabel = new JLabel("Jika data tidak sesuai, silakan hubungi administrator");
-        infoLabel.setFont(new Font("Arial", Font.ITALIC, 14));
-        infoLabel.setForeground(new Color(149, 165, 166));
-        infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        contentPanel.add(infoLabel);
+//        contentPanel.add(Box.createVerticalStrut(30));
+//        JLabel infoLabel = new JLabel("Jika data tidak sesuai, silakan hubungi administrator");
+//        infoLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+//        infoLabel.setForeground(new Color(149, 165, 166));
+//        infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+//        contentPanel.add(infoLabel);
 
         // Tambahkan content panel ke main panel
         gbc.gridx = 0;

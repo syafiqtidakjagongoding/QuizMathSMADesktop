@@ -4,331 +4,227 @@
  */
 package com.tugas.quizmath_player.repository;
 
-import com.tugas.quizmath_player.entity.Answer;
-import com.tugas.quizmath_player.entity.QuestionManipulation;
-import com.tugas.quizmath_player.entity.QuestionId;
-import com.tugas.quizmath_player.entity.Question;
-import com.tugas.quizmath_player.entity.OptionAnswer;
+import com.tugas.quizmath_player.entity.*;
 import com.tugas.quizmath_player.database.Database;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-
-import java.awt.Component;
-import java.sql.Statement;
 import javax.swing.JOptionPane;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+
 /**
  *
  * @author syafiq
  */
 public class QuestionRepository {
-     public QuestionId getAllId() {
-        String sql = "SELECT id FROM question";
-        List<Integer> ids = new ArrayList<>();
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                ids.add(rs.getInt("id"));
-            }
-
+    public QuestionId getAllId() {
+        try (Session session = Database.getSessionFactory().openSession()) {
+            List<Integer> ids = session.createQuery("SELECT q.id FROM Question q", Integer.class).list();
             return new QuestionId(ids);
-
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            return new QuestionId(new ArrayList<>());
         }
-
-        return new QuestionId(new ArrayList<>()); // kalau error / kosong
     }
-     
+
     public Question getQuestionById(int questionId) {
-        String sql = "SELECT q.id, q.question_text, q.level, q.answer_type, " +
-                     "q.topic, o.id AS id_answer, o.answer, o.correct, o.score, qi.image_path, o.image_answer " +
-                     "FROM question q " +
-                     "LEFT JOIN options_answer o ON o.question_id = q.id " +
-                     "LEFT JOIN question_image qi ON qi.question_id = q.id " +
-                     "WHERE q.id = ?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, questionId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                Question question = null;
-
-                while (rs.next()) {
-                    if (question == null) {
-                        question = new Question(
-                            rs.getInt("id"),
-                            rs.getString("question_text"),
-                            rs.getString("answer_type"), // answer_type belum ada di query
-                            rs.getString("level"),
-                            rs.getString("topic"),
-                            rs.getString("image_path")
-                        );
-                    }
-
-                    // Tambah opsi jawaban
-                    int idAnswer = rs.getInt("id_answer");
-                    String answer = rs.getString("answer");
-                     int score = rs.getInt("score");
-                     String image_answer = rs.getString("image_answer");
-                    boolean correct = rs.getBoolean("correct");
-                    question.addAnswer(new OptionAnswer(idAnswer, answer, score,correct, image_answer));
-                }
-
+        try (Session session = Database.getSessionFactory().openSession()) {
+            Question question = session.get(Question.class, questionId);
+            if (question != null) {
+                // Fetch image manually as it is not mapped in Question entity directly
+                // (transient field)
+                String hqlImage = "SELECT qi.imagePath FROM QuestionImage qi WHERE qi.question.id = :qid";
+                String imagePath = session.createQuery(hqlImage, String.class)
+                        .setParameter("qid", questionId)
+                        .uniqueResult();
+                question.setImagePath(imagePath);
                 return question;
             }
-
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return null; // kalau tidak ketemu
+        return null;
     }
+
     public List<QuestionManipulation> getAllQuestion(Component parentComponent) {
-        List<QuestionManipulation> questions = new ArrayList<>();
+        List<QuestionManipulation> result = new ArrayList<>();
+        try (Session session = Database.getSessionFactory().openSession()) {
+            List<Question> questions = session.createQuery("FROM Question", Question.class).list();
 
-        String sql = """
-            SELECT q.id, q.question_text, q.answer_type, q.level, q.topic,
-                   oa.id AS answer_id, oa.answer, oa.label, oa.score, oa.correct,
-                   qi.image_path, oa.image_answer
-            FROM question q
-            INNER JOIN options_answer oa ON oa.question_id = q.id
-            LEFT JOIN question_image qi ON qi.question_id = q.id
-            ORDER BY q.id;
-            """;
+            for (Question q : questions) {
+                // Fetch image
+                String hqlImage = "SELECT qi.imagePath FROM QuestionImage qi WHERE qi.question.id = :qid";
+                String imagePath = session.createQuery(hqlImage, String.class)
+                        .setParameter("qid", q.getId())
+                        .uniqueResult();
 
-      try (Connection conn = Database.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql);
-         ResultSet rs = stmt.executeQuery()) {
-
-        QuestionManipulation currentQuestion = null;
-        int lastQuestionId = -1;
-
-        while (rs.next()) {
-            int qid = rs.getInt("id");
-
-            // Kalau ketemu question baru
-            if (qid != lastQuestionId) {
-                currentQuestion = new QuestionManipulation(
-                        qid,
-                        rs.getString("question_text"),
-                        rs.getString("image_path"),
-                        rs.getString("answer_type"),
-                        rs.getString("level"),
-                        rs.getString("topic"),
-                        new ArrayList<>() // bikin list kosong untuk jawaban
-                );
-                questions.add(currentQuestion);
-                lastQuestionId = qid;
-            }
-
-            // Tambahkan jawaban ke question yang sedang aktif
-            Answer ans = new Answer(
-                    rs.getInt("answer_id"),
-                    rs.getString("answer"),
-                    rs.getString("label"),
-                    rs.getInt("score"),
-                    rs.getBoolean("correct"),
-                    rs.getString("image_answer")
-            );
-            currentQuestion.answers.add(ans);
-        }
-    } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(parentComponent, "Gagal mengambil data soal: " + e.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
-    }
-          return questions;
-
-    }
-   
-  public void deleteSoal(int question_id, Component parentComponent) {
-    String sql = "DELETE FROM question WHERE id = ?";
-
-    try (Connection conn = Database.getConnection();  // ganti dengan method koneksi kamu
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-        
-        stmt.setInt(1, question_id);   // set parameter id
-
-        int rowsDeleted = stmt.executeUpdate();
-        if (rowsDeleted > 0) {
-           JOptionPane.showMessageDialog(parentComponent, "Data soal berhasil dihapus!");
-        } else {
-           JOptionPane.showMessageDialog(parentComponent, "Data soal tidak ditemukan");
-
-        }
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(parentComponent, "Gagal menghapus data soal: " + e.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
-    }
-}
-
-   
-   public void createSoal(QuestionManipulation question,Component parentComponent) {
-    String insertQuestion = """
-        INSERT INTO question (question_text, answer_type, level, topic) 
-        VALUES (?,?,?,?)
-    """;
-
-    String insertAnswer = """
-        INSERT INTO options_answer (answer, question_id, score, correct, label, image_answer) 
-        VALUES (?,?,?,?,?,?)
-    """;
-
-    String insertImage = """
-        INSERT INTO question_image (image_path, question_id) 
-        VALUES (?,?)
-    """;
-
-    try (Connection conn = Database.getConnection()) {
-        conn.setAutoCommit(false);
-
-        // 1. Insert ke question
-        int questionId;
-        try (PreparedStatement ps = conn.prepareStatement(insertQuestion, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, question.question_text);
-            ps.setString(2, question.answer_type);
-            ps.setString(3, question.level);
-            ps.setString(4, question.topic);
-            ps.executeUpdate();
-
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    questionId = rs.getInt(1);
-                } else {
-                    throw new SQLException("Gagal ambil generated key untuk question");
+                List<Answer> answers = new ArrayList<>();
+                for (OptionAnswer oa : q.getAnswers()) {
+                    answers.add(new Answer(
+                            oa.getId(),
+                            oa.getAnswer(),
+                            oa.getLabel(),
+                            oa.getScore(),
+                            oa.isCorrect(),
+                            oa.getImageAnswer()));
                 }
-            }
-        }
 
-        // 2. Insert semua jawaban
-        try (PreparedStatement ps = conn.prepareStatement(insertAnswer)) {
-            for (Answer ans : question.answers) {
-                ps.setString(1, ans.answer);
-                ps.setInt(2, questionId);
-                ps.setInt(3, ans.score);
-                ps.setBoolean(4, ans.correct);
-                ps.setString(5, ans.label);
-                ps.setString(6, ans.image_answer);
-                ps.addBatch();
+                QuestionManipulation qm = new QuestionManipulation(
+                        q.getId(),
+                        q.getQuestionText(),
+                        imagePath,
+                        q.getAnswerType(),
+                        q.getLevel(),
+                        q.getTopic(),
+                        answers);
+                result.add(qm);
             }
-            ps.executeBatch();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(parentComponent, "Gagal mengambil data soal: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
+        return result;
+    }
 
-        // 3. Insert gambar kalau ada
-        if (question.question_image != null && !question.question_image.isEmpty()) {
-            try (PreparedStatement ps = conn.prepareStatement(insertImage)) {
-                ps.setString(1, question.question_image);
-                ps.setInt(2, questionId);
-                ps.executeUpdate();
+    public void deleteSoal(int question_id, Component parentComponent) {
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            Question q = session.get(Question.class, question_id);
+            if (q != null) {
+                // Delete image manual if not cascaded (not mapped in Question)
+                session.createMutationQuery("DELETE FROM QuestionImage WHERE question.id = :qid")
+                        .setParameter("qid", question_id)
+                        .executeUpdate();
+
+                session.remove(q);
+                tx.commit();
+                JOptionPane.showMessageDialog(parentComponent, "Data soal berhasil dihapus!");
+            } else {
+                JOptionPane.showMessageDialog(parentComponent, "Data soal tidak ditemukan");
             }
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
+            JOptionPane.showMessageDialog(parentComponent, "Gagal menghapus data soal: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
+    }
 
-        conn.commit();
+    public void createSoal(QuestionManipulation questionDto, Component parentComponent) {
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+
+            Question q = new Question();
+            q.setQuestionText(questionDto.question_text);
+            q.setAnswerType(questionDto.answer_type);
+            q.setLevel(questionDto.level);
+            q.setTopic(questionDto.topic);
+
+            // Save question first to get ID
+            session.persist(q);
+
+            // Save image if exists
+            if (questionDto.question_image != null && !questionDto.question_image.isEmpty()) {
+                QuestionImage qi = new QuestionImage(questionDto.question_image, q);
+                session.persist(qi);
+            }
+
+            // Save answers
+            for (Answer ans : questionDto.answers) {
+                OptionAnswer oa = new OptionAnswer();
+                oa.setAnswer(ans.answer);
+                oa.setScore(ans.score);
+                oa.setCorrect(ans.correct);
+                oa.setLabel(ans.label);
+                oa.setImageAnswer(ans.image_answer);
+                oa.setQuestion(q);
+                session.persist(oa);
+            }
+
+            tx.commit();
             JOptionPane.showMessageDialog(parentComponent, "Data soal baru berhasil disimpan!");
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(parentComponent, "Gagal menambah data soal: " + e.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(parentComponent, "Gagal menambah data soal: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
-}
-public void updateSoal(QuestionManipulation question, Component parentComponent) {
-    String updateQuestion = """
-        UPDATE question
-        SET question_text = ?, answer_type = ?, level = ?, topic = ?
-        WHERE id = ?
-    """;
 
-    String deleteAnswers = """
-        DELETE FROM options_answer WHERE question_id = ?
-    """;
+    public void updateSoal(QuestionManipulation questionDto, Component parentComponent) {
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
 
-    String insertAnswer = """
-        INSERT INTO options_answer (answer, question_id, score, correct, label, image_answer)
-        VALUES (?,?,?,?,?,?)
-    """;
+            Question q = session.get(Question.class, questionDto.id);
+            if (q != null) {
+                q.setQuestionText(questionDto.question_text);
+                q.setAnswerType(questionDto.answer_type);
+                q.setLevel(questionDto.level);
+                q.setTopic(questionDto.topic);
 
-    String deleteImage = """
-        DELETE FROM question_image WHERE question_id = ?
-    """;
+                // Update Image
+                // Delete old image
+                session.createMutationQuery("DELETE FROM QuestionImage WHERE question.id = :qid")
+                        .setParameter("qid", q.getId())
+                        .executeUpdate();
 
-    String insertImage = """
-        INSERT INTO question_image (image_path, question_id)
-        VALUES (?,?)
-    """;
+                // Insert new if exists
+                if (questionDto.question_image != null && !questionDto.question_image.isEmpty()) {
+                    QuestionImage qi = new QuestionImage(questionDto.question_image, q);
+                    session.persist(qi);
+                }
 
-    try (Connection conn = Database.getConnection()) {
-        conn.setAutoCommit(false);
+                // Update Answers: Delete old, add new (simplest strategy as in original)
+                // Or we could merge, but original code deleted all.
+                // We can use orphanRemoval if mapped, but here we can just clear list or
+                // manually delete.
+                // Since we have CascadeType.ALL on answers list in Question entity, we can just
+                // clear the list and add new ones if we manage the collection.
+                // However, simpler to match original logic: delete all options for this
+                // question.
+                session.createMutationQuery("DELETE FROM OptionAnswer WHERE question.id = :qid")
+                        .setParameter("qid", q.getId())
+                        .executeUpdate();
+                q.getAnswers().clear();
+                session.flush();
 
-        // 1. Update tabel question
-        try (PreparedStatement ps = conn.prepareStatement(updateQuestion)) {
-            ps.setString(1, question.question_text);
-            ps.setString(2, question.answer_type);
-            ps.setString(3, question.level);
-            ps.setString(4, question.topic);
-            ps.setInt(5, question.id);   // <== PENTING: pastikan question.id sudah terisi
-            ps.executeUpdate();
-        }
+                for (Answer ans : questionDto.answers) {
+                    OptionAnswer oa = new OptionAnswer();
+                    oa.setAnswer(ans.answer);
+                    oa.setScore(ans.score);
+                    oa.setCorrect(ans.correct);
+                    oa.setLabel(ans.label);
+                    oa.setImageAnswer(ans.image_answer);
 
-        // 2. Hapus jawaban lama
-        try (PreparedStatement ps = conn.prepareStatement(deleteAnswers)) {
-            ps.setInt(1, question.id);
-            ps.executeUpdate();
-        }
-
-        // 3. Insert jawaban baru
-        try (PreparedStatement ps = conn.prepareStatement(insertAnswer)) {
-            for (Answer ans : question.answers) {
-                ps.setString(1, ans.answer);
-                ps.setInt(2, question.id);
-                ps.setInt(3, ans.score);
-                ps.setBoolean(4, ans.correct);
-                ps.setString(5, ans.label);
-                ps.setString(6, ans.image_answer);
-                ps.addBatch();
+                    q.addAnswer(oa); // managed by cascade
+                    session.persist(oa);
+                }
+                session.merge(q);
             }
-            ps.executeBatch();
-        }
 
-        // 4. Update gambar
-        //    (strategi: hapus semua, insert baru jika ada)
-        try (PreparedStatement ps = conn.prepareStatement(deleteImage)) {
-            ps.setInt(1, question.id);
-            ps.executeUpdate();
-        }
-
-        if (question.question_image != null && !question.question_image.isEmpty()) {
-            try (PreparedStatement ps = conn.prepareStatement(insertImage)) {
-                ps.setString(1, question.question_image);
-                ps.setInt(2, question.id);
-                ps.executeUpdate();
+            tx.commit();
+            JOptionPane.showMessageDialog(parentComponent, "Data soal berhasil diperbarui!");
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
+            try {
+                // Try to find if exception was rollback-only
+            } catch (Exception ex) {
             }
-        }
 
-        conn.commit();
-        JOptionPane.showMessageDialog(parentComponent, "Data soal berhasil diperbarui!");
-
-    } catch (SQLException e) {
-        try {
-            // rollback kalau error
-            Database.getConnection().rollback();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(parentComponent, "Gagal memperbarui data soal: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
-        JOptionPane.showMessageDialog(parentComponent, "Gagal memperbarui data soal: " + e.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
     }
-}
-
 }

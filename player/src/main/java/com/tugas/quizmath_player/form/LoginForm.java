@@ -5,6 +5,7 @@ import javax.swing.*;
 import com.tugas.quizmath_player.constant.Errors;
 import com.tugas.quizmath_player.entity.Admin;
 import com.tugas.quizmath_player.entity.DataSiswa;
+import com.tugas.quizmath_player.helper.Session;
 import com.tugas.quizmath_player.repository.AdminRepository;
 import com.tugas.quizmath_player.repository.DataSiswaRepository;
 import java.awt.*;
@@ -273,7 +274,8 @@ public class LoginForm extends JFrame {
             boolean checkLogin = this.admin_repo.checkLogin(admin);
             // boolean checkLogin = true;
             if (checkLogin) {
-                new SoalForm().setVisible(true);
+                Session.setAdminSession(username); // Set admin session
+                new DashboardForm().setVisible(true);
                 this.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Username atau password tidak ditemukan", "User not found",

@@ -4,15 +4,13 @@
  */
 package com.tugas.quizmath_player.repository;
 
-
 import com.tugas.quizmath_player.entity.Kelas;
 import com.tugas.quizmath_player.database.Database;
+import org.hibernate.Session;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import java.awt.Component;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -23,29 +21,16 @@ import javax.swing.JOptionPane;
  */
 public class KelasRepository {
     public List<Kelas> getAllKelas(Component parentComponent) {
-        String sql = """
-        SELECT id, kelas, jurusan FROM kelas
-        """;
-        List<Kelas> kelass = new ArrayList<>();
-         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String namaKelas = rs.getString("kelas");
-                String jurusan = rs.getString("jurusan");
-                
-               Kelas kelas = new Kelas(id,namaKelas,jurusan);
-               kelass.add(kelas);
-            }
-
-        } catch (SQLException e) {
+        try (Session session = Database.getSessionFactory().openSession()) {
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Kelas> criteria = builder.createQuery(Kelas.class);
+            criteria.from(Kelas.class);
+            return session.createQuery(criteria).getResultList();
+        } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(parentComponent, "Gagal mengambil data kelas: " + e.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return new ArrayList<>();
         }
-
-        return kelass;
     }
 }

@@ -109,7 +109,7 @@ public class QuizLevelSelection extends JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
-            QuizQuestionForm2 quiz_question = new QuizQuestionForm2(quizQuestions);
+    QuizQuestionSiswa quiz_question = new QuizQuestionSiswa(quizQuestions);
             quiz_question.setLevel("MUDAH");
             quiz_question.setVisible(true);
             this.dispose();
@@ -171,7 +171,7 @@ public class QuizLevelSelection extends JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
-            QuizQuestionForm2 quiz_question = new QuizQuestionForm2(quizQuestions);
+            QuizQuestionSiswa quiz_question = new QuizQuestionSiswa(quizQuestions);
            
             quiz_question.setLevel("NORMAL");
             quiz_question.setVisible(true);
@@ -235,7 +235,7 @@ public class QuizLevelSelection extends JFrame {
                         JOptionPane.ERROR_MESSAGE);
             }
 
-            QuizQuestionForm2 quiz_question = new QuizQuestionForm2(quizQuestions);
+            QuizQuestionSiswa quiz_question = new QuizQuestionSiswa(quizQuestions);
             quiz_question.setLevel("SUSAH");
             quiz_question.setVisible(true);
             this.dispose();

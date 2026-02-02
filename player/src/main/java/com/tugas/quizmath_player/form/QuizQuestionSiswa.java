@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class QuizQuestionForm2 extends JFrame {
+public class QuizQuestionSiswa extends JFrame {
 	private JLabel timerLabel;
 	private JLabel levelLabel;
 	private JLabel questionNumberLabel;
@@ -36,7 +36,7 @@ public class QuizQuestionForm2 extends JFrame {
 	private List<QuizQuestion> questions;
 	private List<Integer> userAnswers; // Menyimpan jawaban user untuk setiap soal
 
-	public QuizQuestionForm2(List<QuizQuestion> questions) {
+	public QuizQuestionSiswa(List<QuizQuestion> questions) {
 		this.question_repo = new QuestionRepository();
 		initializeQuestions(questions); // Load dummy questions
 		this.fscore_repo = new FinalScoreRepository();

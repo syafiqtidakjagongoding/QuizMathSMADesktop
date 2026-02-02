@@ -1,248 +1,312 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package com.tugas.quizmath_player.form;
 
+import com.tugas.quizmath_player.entity.DetailedAnswer;
 import com.tugas.quizmath_player.entity.Leaderboard;
 import com.tugas.quizmath_player.repository.FinalScoreRepository;
+import com.tugas.quizmath_player.repository.SiswaAnswerRepository;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.util.Comparator;
 import java.util.List;
-import javax.swing.JFrame;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
-/**
- *
- * @author syafiq
- */
-public class NilaiForm extends javax.swing.JFrame {
-    
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(LeaderboardForm.class.getName());
+public class NilaiForm extends JPanel {
+
     private FinalScoreRepository fscore_repo;
-    /**
-     * Creates new form Dashboard
-     */
+    private SiswaAnswerRepository siswaAnswer_repo;
+    private JTable studentTable;
+    private DefaultTableModel studentTableModel;
+    private JTable detailTable;
+    private DefaultTableModel detailTableModel;
+    private JComboBox<String> cmbFilter;
+    private JButton btnRefresh;
+    private JLabel lblDetailTitle;
+    
+    private List<Leaderboard> currentData;
+    private int selectedFinalScoreId = -1;
+
     public NilaiForm() {
         this.fscore_repo = new FinalScoreRepository();
-                initComponents();
+        this.siswaAnswer_repo = new SiswaAnswerRepository();
+        initComponents();
+        loadData();
+    }
 
-        setLocationRelativeTo(null); // posisi center
-       setExtendedState(JFrame.MAXIMIZED_BOTH); // otomatis full screen
-//        getLeaderboard();
+    private void initComponents() {
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Title
+        JLabel title = new JLabel("Data Nilai Siswa");
+        title.setFont(new Font("Arial", Font.BOLD, 24));
+        add(title, BorderLayout.NORTH);
+
+        // Left Panel: Student List
+        JPanel leftPanel = createStudentListPanel();
+        
+        // Right Panel: Answer Details
+        JPanel rightPanel = createDetailPanel();
+
+        // Split Pane
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+        splitPane.setDividerLocation(500);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setResizeWeight(0.4);
+        
+        add(splitPane, BorderLayout.CENTER);
     }
     
-    private void getLeaderboard() {
+    private JPanel createStudentListPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Daftar Siswa"));
+        
+        // Filter Panel
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        filterPanel.setOpaque(false);
+        
+        filterPanel.add(new JLabel("Urutkan:"));
+        
+        cmbFilter = new JComboBox<>(new String[]{"Terbaru", "Nilai Tertinggi", "Nilai Terendah"});
+        cmbFilter.addActionListener(e -> sortData());
+        filterPanel.add(cmbFilter);
+
+        btnRefresh = new JButton("Refresh");
+        btnRefresh.addActionListener(e -> loadData());
+        filterPanel.add(btnRefresh);
+
+        // Table
         String[] columnNames = {
-            "id", "nama", "nis", "wrong answer", "total question", "final score" 
+            "ID", "Nama", "NIS", "Kelas", "Benar", "Salah", "Total", "Nilai"
+        };
+        studentTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 0 || columnIndex == 4 || columnIndex == 5 || columnIndex == 6) return Integer.class;
+                if (columnIndex == 7) return Double.class;
+                return String.class;
+            }
         };
 
-        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-        List<Leaderboard> lboards = fscore_repo.getAllScore(this);
+        studentTable = new JTable(studentTableModel);
+        studentTable.setRowHeight(30);
+        studentTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        
+        // Hide ID
+        studentTable.getColumnModel().getColumn(0).setMinWidth(0);
+        studentTable.getColumnModel().getColumn(0).setMaxWidth(0);
+        studentTable.getColumnModel().getColumn(0).setPreferredWidth(0);
+        
+        // Add selection listener
+        studentTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                loadStudentDetails();
+            }
+        });
 
-        for (Leaderboard l : lboards) {
+        JScrollPane scrollPane = new JScrollPane(studentTable);
+        
+        panel.add(filterPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JPanel createDetailPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Detail Jawaban"));
+        
+        // Title label for selected student
+        lblDetailTitle = new JLabel("Pilih siswa untuk melihat detail jawaban");
+        lblDetailTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        lblDetailTitle.setHorizontalAlignment(JLabel.CENTER);
+        panel.add(lblDetailTitle, BorderLayout.NORTH);
+        
+        // Detail table
+        String[] columnNames = {
+            "No", "Pertanyaan", "Jawaban Siswa", "Status", "Jawaban Benar"
+        };
+        detailTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        detailTable = new JTable(detailTableModel);
+        detailTable.setRowHeight(40);
+        detailTable.getColumnModel().getColumn(0).setPreferredWidth(40);
+        detailTable.getColumnModel().getColumn(0).setMaxWidth(60);
+        detailTable.getColumnModel().getColumn(1).setPreferredWidth(250);
+        detailTable.getColumnModel().getColumn(2).setPreferredWidth(150);
+        detailTable.getColumnModel().getColumn(3).setPreferredWidth(80);
+        detailTable.getColumnModel().getColumn(4).setPreferredWidth(150);
+        
+        // Custom renderer for Status column with colors
+        detailTable.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (value != null) {
+                    String status = value.toString();
+                    if (status.contains("✓")) {
+                        c.setForeground(new Color(46, 204, 113)); // Green
+                        setFont(getFont().deriveFont(Font.BOLD));
+                    } else if (status.contains("✗")) {
+                        c.setForeground(new Color(231, 76, 60)); // Red
+                        setFont(getFont().deriveFont(Font.BOLD));
+                    }
+                }
+                
+                if (isSelected) {
+                    c.setBackground(table.getSelectionBackground());
+                } else {
+                    c.setBackground(Color.WHITE);
+                }
+                
+                return c;
+            }
+        });
+        
+        JScrollPane scrollPane = new JScrollPane(detailTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private void loadData() {
+        new SwingWorker<List<Leaderboard>, Void>() {
+            @Override
+            protected List<Leaderboard> doInBackground() {
+                return fscore_repo.getAllScore(NilaiForm.this);
+            }
 
+            @Override
+            protected void done() {
+                try {
+                    studentTableModel.setRowCount(0);
+                    List<Leaderboard> list = get();
+                    populateTable(list);
+                    sortData();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(NilaiForm.this, "Error loading data: " + e.getMessage());
+                }
+            }
+        }.execute();
+    }
+    
+    private void populateTable(List<Leaderboard> list) {
+        this.currentData = list;
+        studentTableModel.setRowCount(0);
+        if (list == null) return;
+        
+        for (Leaderboard l : list) {
             Object[] row = {
-               l.id,
-               l.siswa,
-               l.nis,
-               l.correct_anwer,
-               l.wrong_anwer,
-               l.total_question,
-               l.final_score
+                l.id,
+                l.siswa,
+                l.nis,
+                l.kelas,
+                l.correct_anwer,
+                l.wrong_anwer,
+                l.total_question,
+                l.final_score
             };
-
-            model.addRow(row);
+            studentTableModel.addRow(row);
         }
-
-        tabelLeaderboard.setModel(model);
-        tabelLeaderboard.setRowHeight(50);
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        jPanel1 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tabelLeaderboard = new javax.swing.JTable();
-        jButton6 = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        jPanel1.setBackground(new java.awt.Color(0, 153, 255));
-        jPanel1.setForeground(new java.awt.Color(153, 255, 255));
-
-        jLabel1.setFont(new java.awt.Font("Noto Sans CJK HK Light", 1, 18)); // NOI18N
-        jLabel1.setText("Hello admin");
-
-        jButton1.setText("Soal");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+    private void sortData() {
+        if (currentData == null) return;
+        String filter = (String) cmbFilter.getSelectedItem();
+        
+        if ("Nilai Tertinggi".equals(filter)) {
+            currentData.sort(Comparator.comparingDouble((Leaderboard l) -> l.final_score).reversed());
+        } else if ("Nilai Terendah".equals(filter)) {
+            currentData.sort(Comparator.comparingDouble((Leaderboard l) -> l.final_score));
+        } else if ("Terbaru".equals(filter)) {
+            currentData.sort(Comparator.comparingInt((Leaderboard l) -> l.id).reversed());
+        }
+        
+        populateTable(currentData);
+    }
+    
+    private void loadStudentDetails() {
+        int selectedRow = studentTable.getSelectedRow();
+        if (selectedRow < 0) {
+            detailTableModel.setRowCount(0);
+            lblDetailTitle.setText("Pilih siswa untuk melihat detail jawaban");
+            return;
+        }
+        
+        selectedFinalScoreId = (int) studentTable.getValueAt(selectedRow, 0);
+        String studentName = (String) studentTable.getValueAt(selectedRow, 1);
+        double score = (double) studentTable.getValueAt(selectedRow, 7);
+        
+        lblDetailTitle.setText(String.format("Detail Jawaban: %s (Nilai: %.2f)", studentName, score));
+        
+        // Load details in background
+        new SwingWorker<List<DetailedAnswer>, Void>() {
+            @Override
+            protected List<DetailedAnswer> doInBackground() {
+                int siswaId = siswaAnswer_repo.getStudentIdByFinalScoreId(selectedFinalScoreId, NilaiForm.this);
+                if (siswaId > 0) {
+                    return siswaAnswer_repo.getStudentAnswers(siswaId, NilaiForm.this);
+                }
+                return List.of();
             }
-        });
 
-        jButton2.setText("Leaderboard");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+            @Override
+            protected void done() {
+                try {
+                    detailTableModel.setRowCount(0);
+                    List<DetailedAnswer> details = get();
+                    
+                    for (DetailedAnswer detail : details) {
+                        String status = detail.isCorrect() ? "✓ Benar" : "✗ Salah";
+                        String correctAnswer = detail.isCorrect() ? "-" : detail.getCorrectAnswer();
+                        
+                        // Truncate question text if too long
+                        String questionText = detail.getQuestionText();
+                        if (questionText.length() > 100) {
+                            questionText = questionText.substring(0, 97) + "...";
+                        }
+                        
+                        Object[] row = {
+                            detail.getQuestionNumber(),
+                            questionText,
+                            detail.getStudentAnswer(),
+                            status,
+                            correctAnswer
+                        };
+                        detailTableModel.addRow(row);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(NilaiForm.this, 
+                        "Error loading answer details: " + e.getMessage());
+                }
             }
-        });
-
-        jButton3.setText("Daftar Siswa");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
-            }
-        });
-
-        jButton5.setText("Nilai");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
-
-        jButton7.setText("Keluar");
-        jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton7ActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(63, 63, 63)
-                .addComponent(jLabel1)
-                .addContainerGap(66, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(25, 25, 25)
-                .addComponent(jLabel1)
-                .addGap(18, 18, 18)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        tabelLeaderboard.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
-            },
-            new String [] {
-                "Id", "Nama", "NIS", "Soal 1", "Soal 2"
-            }
-        ));
-        tabelLeaderboard.setShowGrid(true);
-        jScrollPane1.setViewportView(tabelLeaderboard);
-
-        jButton6.setText("Refresh");
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(23, 23, 23))))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addComponent(jButton6)
-                .addGap(102, 102, 102)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1041, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-      new DaftarSiswaForm().setVisible(true);
-            this.dispose();
-
-    }//GEN-LAST:event_jButton3ActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-      new SoalForm().setVisible(true);
-      this.dispose();
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-     getLeaderboard();
-    }//GEN-LAST:event_jButton6ActionPerformed
-
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-//      new NilaiForm().setVisible(true);
-    }//GEN-LAST:event_jButton5ActionPerformed
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        new LeaderboardForm().setVisible(true);     
-        this.dispose();
-    }//GEN-LAST:event_jButton2ActionPerformed
-
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-      new LoginForm().setVisible(true);
-      this.dispose();
-    }//GEN-LAST:event_jButton7ActionPerformed
-
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable tabelLeaderboard;
-    // End of variables declaration//GEN-END:variables
+        }.execute();
+    }
 }

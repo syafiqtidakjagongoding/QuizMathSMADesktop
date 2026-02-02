@@ -4,34 +4,33 @@
  */
 package com.tugas.quizmath_player.database;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 /**
  *
  * @author syafiq
  */
 public class Database {
-    private static final String host = "localhost";
-    private static final String port = "3306";
-    private static final String dbname = "quizmath";
-    private static final String username = "root";
-    private static final String password = "root";
-    
-    public static Connection getConnection() {
-        Connection conn = null;
+    private static final SessionFactory sessionFactory = buildSessionFactory();
+
+    private static SessionFactory buildSessionFactory() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            String url = "jdbc:mysql://" + host + ":" + port + "/" + dbname + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-            conn = DriverManager.getConnection(url, username, password);
-            System.out.println("✅ Koneksi berhasil!");
-        } catch (ClassNotFoundException e) {
-            System.err.println("❌ Driver MySQL tidak ditemukan: " + e.getMessage());
-        } catch (SQLException e) {
-            System.err.println("❌ Gagal koneksi database: " + e.getMessage());
+            // Create the SessionFactory from hibernate.cfg.xml
+            return new Configuration().configure().buildSessionFactory();
+        } catch (Throwable ex) {
+            // Make sure you log the exception, as it might be swallowed
+            System.err.println("Initial SessionFactory creation failed." + ex);
+            throw new ExceptionInInitializerError(ex);
         }
-       return conn;
     }
-    
+
+    public static SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    public static void shutdown() {
+        // Close caches and connection pools
+        getSessionFactory().close();
+    }
 }

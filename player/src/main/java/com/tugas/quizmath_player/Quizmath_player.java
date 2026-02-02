@@ -25,7 +25,5 @@ public class Quizmath_player {
             lf.startLoading();  // jalanin progress bar
         });
         
-//       new form.OpeningForm().setVisible(true);
-   //     java.awt.EventQueue.invokeLater(() -> new form.AuthForm().setVisible(true));
     }
 }

@@ -1,0 +1,15 @@
+services:
+  mysqldb:
+    image: mysql:9.5.0
+    container_name: mysqlquizmath
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_USER: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqlquizmath:/var/lib/mysql
+
+volumes:
+  mysqlquizmath:
+

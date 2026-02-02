@@ -4,72 +4,90 @@
  */
 package com.tugas.quizmath_player.repository;
 
-
 import com.tugas.quizmath_player.database.Database;
-
-import java.util.List;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.tugas.quizmath_player.entity.OptionAnswer;
+import com.tugas.quizmath_player.entity.Siswa;
+import com.tugas.quizmath_player.entity.SiswaAnswer;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author syafiq
  */
 public class AnswerRepository {
-   public void upsertAnswer(int questionAnswerId, int siswaId) {
-    String sql = "INSERT INTO siswa_answer (question_answer_id, siswa_id) " +
-                 "VALUES (?, ?) " +
-                 "ON DUPLICATE KEY UPDATE question_answer_id = VALUES(question_answer_id)";
 
-    try (Connection conn = Database.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public void upsertAnswer(int questionAnswerId, int siswaId) {
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
 
-        stmt.setInt(1, questionAnswerId);
-        stmt.setInt(2, siswaId);
+            // Logic: Ensure one answer per question for this student.
+            // 1. Find the Question ID for the given OptionAnswer ID (questionAnswerId)
+            OptionAnswer newOption = session.get(OptionAnswer.class, questionAnswerId);
+            if (newOption == null)
+                return; // Should not happen
 
-        stmt.executeUpdate();
+            int questionId = newOption.getQuestion().getId();
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
-   public void deleteAnswerByQuestion(int questionId, int siswaId) {
-    String sql = "DELETE FROM siswa_answer " +
-                 "WHERE siswa_id = ? AND question_answer_id IN (" +
-                 "   SELECT id FROM options_answer WHERE question_id = ?" +
-                 ")";
-    try (Connection conn = Database.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setInt(1, siswaId);
-        stmt.setInt(2, questionId);
-        stmt.executeUpdate();
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
+            // 2. Find existing answer for this student and this QUESTION
+            // We need to join SiswaAnswer -> OptionAnswer -> Question
+            String hqlFind = "SELECT sa FROM SiswaAnswer sa WHERE sa.siswa.id = :sid AND sa.optionAnswer.question.id = :qid";
+            SiswaAnswer existing = session.createQuery(hqlFind, SiswaAnswer.class)
+                    .setParameter("sid", siswaId)
+                    .setParameter("qid", questionId)
+                    .uniqueResult();
 
-public List<String> getSelectedAnswers(int siswaId, int questionId) {
-    List<String> selected = new ArrayList<>();
+            if (existing != null) {
+                // Update
+                existing.setOptionAnswer(newOption);
+                session.merge(existing);
+            } else {
+                // Insert
+                Siswa siswa = session.get(Siswa.class, siswaId);
+                SiswaAnswer newSa = new SiswaAnswer(siswa, newOption);
+                session.persist(newSa);
+            }
 
-    String sql = "SELECT oa.label FROM siswa_answer s INNER JOIN options_answer oa ON s.question_answer_id = oa.id WHERE s.siswa_id = ? AND oa.question_id = ?";
-
-    try (Connection conn = Database.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-        stmt.setInt(1, siswaId);
-        stmt.setInt(2, questionId);
-
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()) {
-            selected.add(rs.getString("label")); // A/B/C/D
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
     }
 
-    return selected;
-}
+    public void deleteAnswerByQuestion(int questionId, int siswaId) {
+        Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
 
+            String hqlDelete = "DELETE FROM SiswaAnswer sa WHERE sa.siswa.id = :sid AND sa.optionAnswer.question.id = :qid";
+            session.createMutationQuery(hqlDelete)
+                    .setParameter("sid", siswaId)
+                    .setParameter("qid", questionId)
+                    .executeUpdate();
+
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null)
+                tx.rollback();
+            e.printStackTrace();
+        }
+    }
+
+    public List<String> getSelectedAnswers(int siswaId, int questionId) {
+        try (Session session = Database.getSessionFactory().openSession()) {
+            String hql = "SELECT sa.optionAnswer.label FROM SiswaAnswer sa WHERE sa.siswa.id = :sid AND sa.optionAnswer.question.id = :qid";
+            return session.createQuery(hql, String.class)
+                    .setParameter("sid", siswaId)
+                    .setParameter("qid", questionId)
+                    .list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }

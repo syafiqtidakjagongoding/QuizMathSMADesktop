@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database Connection Settings -->
+        <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/quizmath?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</property>
+        <property name="connection.username">root</property>
+        <property name="connection.password">root</property>
+
+        <!-- JDBC Connection Pool Settings -->
+        <property name="connection.pool_size">20</property>
+        
+        <!-- C3P0 Connection Pool Settings (recommended for production) -->
+        <property name="hibernate.c3p0.min_size">5</property>
+        <property name="hibernate.c3p0.max_size">20</property>
+        <property name="hibernate.c3p0.timeout">300</property>
+        <property name="hibernate.c3p0.max_statements">50</property>
+        <property name="hibernate.c3p0.idle_test_period">3000</property>
+        
+        <!-- Connection release mode -->
+        <property name="hibernate.connection.release_mode">after_transaction</property>
+
+        <!-- SQL Dialect -->
+        <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+
+        <!-- Auto-generation of schema -->
+        <property name="hbm2ddl.auto">update</property>
+
+        <!-- Generic Entity mapping (will be added as we annotate classes) -->
+        <mapping class="com.tugas.quizmath_player.entity.Admin"/>
+        <mapping class="com.tugas.quizmath_player.entity.Kelas"/>
+        <mapping class="com.tugas.quizmath_player.entity.Siswa"/>
+        <mapping class="com.tugas.quizmath_player.entity.Question"/>
+        <mapping class="com.tugas.quizmath_player.entity.OptionAnswer"/>
+        <mapping class="com.tugas.quizmath_player.entity.QuestionImage"/>
+        <mapping class="com.tugas.quizmath_player.entity.SiswaAnswer"/>
+        <mapping class="com.tugas.quizmath_player.entity.FinalScore"/>
+        <!-- Add other entities here later -->
+
+    </session-factory>
+</hibernate-configuration>

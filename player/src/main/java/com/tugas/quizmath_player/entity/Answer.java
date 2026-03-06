@@ -14,22 +14,20 @@ public class Answer {
     public String label;
     public int score;
     public boolean correct;
-    public String image_answer;
     
     // Constructor lengkap
-    public Answer(int id, String answer, String label, int score, boolean correct, String image_path) {
+    public Answer(int id, String answer, String label, int score, boolean correct) {
         this.id = id;
         this.answer = answer;
         this.score = score;
         this.label = label;
-        this.image_answer = image_path;
         this.correct = correct;
     }
-    public Answer(String answer, String label, int score, boolean correct, String image_path) {
+
+    public Answer(String answer, String label, int score, boolean correct) {
         this.id = 0;
         this.answer = answer;
         this.score = score;
-        this.image_answer = image_path;
         this.label = label;
         this.correct = correct;
     }

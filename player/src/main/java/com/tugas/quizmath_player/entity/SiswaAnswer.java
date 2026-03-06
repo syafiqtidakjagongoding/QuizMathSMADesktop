@@ -25,7 +25,17 @@ public class SiswaAnswer {
 	@JoinColumn(name = "question_answer_id", nullable = false)
 	private OptionAnswer optionAnswer;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "final_score_id", nullable = false)
+	private FinalScore finalScore;
+
 	public SiswaAnswer() {
+	}
+
+	public SiswaAnswer(Siswa siswa, OptionAnswer optionAnswer, FinalScore finalScore) {
+		this.siswa = siswa;
+		this.optionAnswer = optionAnswer;
+		this.finalScore = finalScore;
 	}
 
 	public SiswaAnswer(Siswa siswa, OptionAnswer optionAnswer) {
@@ -55,5 +65,13 @@ public class SiswaAnswer {
 
 	public void setOptionAnswer(OptionAnswer optionAnswer) {
 		this.optionAnswer = optionAnswer;
+	}
+
+	public FinalScore getFinalScore() {
+		return finalScore;
+	}
+
+	public void setFinalScore(FinalScore finalScore) {
+		this.finalScore = finalScore;
 	}
 }

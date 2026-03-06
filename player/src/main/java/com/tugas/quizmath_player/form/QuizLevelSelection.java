@@ -75,26 +75,26 @@ public class QuizLevelSelection extends JFrame {
                         continue; // Skip soal yang tidak lengkap
                     }
 
-                    // Ambil 4 jawaban pertama
                     String[] answerTexts = new String[4];
                     boolean[] correctAnswers = new boolean[4];
-                    String[] answerImages = new String[4];
+                    int[] optionIds = new int[4];
 
                     for (int i = 0; i < 4 && i < qm.answers.size(); i++) {
                         Answer ans = qm.answers.get(i);
                         answerTexts[i] = ans.answer;
                         correctAnswers[i] = ans.correct;
-                        answerImages[i] = ans.image_answer;
+                        optionIds[i] = ans.id;
                     }
 
                     // Buat QuizQuestion
                     qq = new QuizQuestion(
-                            qm.question_text,
+                            qm.id,
+                                    qm.question_text,
                             answerTexts,
                             correctAnswers,
-                            qm.answer_type,
-                            qm.question_image,
-                            answerImages);
+                            optionIds,
+                                    qm.answer_type,
+                            qm.question_image);
 
                     quizQuestions.add(qq);
                 }
@@ -137,26 +137,26 @@ public class QuizLevelSelection extends JFrame {
                         continue; // Skip soal yang tidak lengkap
                     }
 
-                    // Ambil 4 jawaban pertama
                     String[] answerTexts = new String[4];
                     boolean[] correctAnswers = new boolean[4];
-                    String[] answerImages = new String[4];
+                    int[] optionIds = new int[4];
 
                     for (int i = 0; i < 4 && i < qm.answers.size(); i++) {
                         Answer ans = qm.answers.get(i);
                         answerTexts[i] = ans.answer;
                         correctAnswers[i] = ans.correct;
-                        answerImages[i] = ans.image_answer;
+                        optionIds[i] = ans.id;
                     }
 
                     // Buat QuizQuestion
                     qq = new QuizQuestion(
-                            qm.question_text,
+                            qm.id,
+                                    qm.question_text,
                             answerTexts,
                             correctAnswers,
-                            qm.answer_type,
-                            qm.question_image,
-                            answerImages);
+                            optionIds,
+                                    qm.answer_type,
+                            qm.question_image);
 
                     quizQuestions.add(qq);
                 }
@@ -200,26 +200,26 @@ public class QuizLevelSelection extends JFrame {
                         continue; // Skip soal yang tidak lengkap
                     }
 
-                    // Ambil 4 jawaban pertama
                     String[] answerTexts = new String[4];
                     boolean[] correctAnswers = new boolean[4];
-                    String[] answerImages = new String[4];
+                    int[] optionIds = new int[4];
 
                     for (int i = 0; i < 4 && i < qm.answers.size(); i++) {
                         Answer ans = qm.answers.get(i);
                         answerTexts[i] = ans.answer;
                         correctAnswers[i] = ans.correct;
-                        answerImages[i] = ans.image_answer;
+                        optionIds[i] = ans.id;
                     }
 
                     // Buat QuizQuestion
                    qq = new QuizQuestion(
-                            qm.question_text,
+                            qm.id,
+                                    qm.question_text,
                             answerTexts,
                             correctAnswers,
-                            qm.answer_type,
-                            qm.question_image,
-                            answerImages);
+                            optionIds,
+                                    qm.answer_type,
+                            qm.question_image);
 
                     quizQuestions.add(qq);
                 }

@@ -15,6 +15,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import com.github.lgooddatepicker.components.DatePicker;
+import com.github.lgooddatepicker.components.DatePickerSettings;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -33,6 +35,7 @@ public class NilaiForm extends JPanel {
     private JTable detailTable;
     private DefaultTableModel detailTableModel;
     private JComboBox<String> cmbFilter;
+    private DatePicker datePicker;
     private JButton btnRefresh;
     private JLabel lblDetailTitle;
     
@@ -85,13 +88,21 @@ public class NilaiForm extends JPanel {
         cmbFilter.addActionListener(e -> sortData());
         filterPanel.add(cmbFilter);
 
+        filterPanel.add(new JLabel("Tanggal:"));
+        DatePickerSettings dateSettings = new DatePickerSettings();
+        dateSettings.setFormatForDatesCommonEra("yyyy-MM-dd");
+        dateSettings.setFormatForDatesBeforeCommonEra("yyyy-MM-dd");
+        datePicker = new DatePicker(dateSettings);
+        datePicker.addDateChangeListener(e -> sortData());
+        filterPanel.add(datePicker);
+
         btnRefresh = new JButton("Refresh");
         btnRefresh.addActionListener(e -> loadData());
         filterPanel.add(btnRefresh);
 
         // Table
         String[] columnNames = {
-            "ID", "Nama", "NIS", "Kelas", "Benar", "Salah", "Total", "Nilai"
+                "ID", "Nama", "NIS", "Kelas", "Benar", "Salah", "Total", "Nilai", "Dibuat"
         };
         studentTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -100,8 +111,8 @@ public class NilaiForm extends JPanel {
             }
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 0 || columnIndex == 4 || columnIndex == 5 || columnIndex == 6) return Integer.class;
-                if (columnIndex == 7) return Double.class;
+                if (columnIndex == 0 || columnIndex == 4 || columnIndex == 5 || columnIndex == 6 || columnIndex == 7)
+                    return Integer.class;
                 return String.class;
             }
         };
@@ -230,8 +241,13 @@ public class NilaiForm extends JPanel {
                 l.correct_anwer,
                 l.wrong_anwer,
                 l.total_question,
-                l.final_score
+                    l.final_score,
+                    l.createdAt != null
+                            ? new java.text.SimpleDateFormat("EEEE, dd MMMM yyyy", new java.util.Locale("id", "ID"))
+                                    .format(l.createdAt)
+                            : ""
             };
+            System.out.println(row);
             studentTableModel.addRow(row);
         }
     }
@@ -247,8 +263,23 @@ public class NilaiForm extends JPanel {
         } else if ("Terbaru".equals(filter)) {
             currentData.sort(Comparator.comparingInt((Leaderboard l) -> l.id).reversed());
         }
-        
-        populateTable(currentData);
+
+        // // Apply Date filter if selected
+        java.time.LocalDate selectedDate = datePicker.getDate();
+        studentTableModel.setRowCount(0);
+        for (Leaderboard l : currentData) {
+            if (selectedDate == null
+                    || (l.createdAt != null && l.createdAt.toLocalDateTime().toLocalDate().equals(selectedDate))) {
+                Object[] row = {
+                        l.id, l.siswa, l.nis, l.kelas, l.correct_anwer, l.wrong_anwer, l.total_question, l.final_score,
+                        l.createdAt != null
+                                ? new java.text.SimpleDateFormat("EEEE, dd MMMM yyyy", new java.util.Locale("id", "ID"))
+                                        .format(l.createdAt)
+                                : ""
+                };
+                studentTableModel.addRow(row);
+            }
+        }
     }
     
     private void loadStudentDetails() {
@@ -261,19 +292,15 @@ public class NilaiForm extends JPanel {
         
         selectedFinalScoreId = (int) studentTable.getValueAt(selectedRow, 0);
         String studentName = (String) studentTable.getValueAt(selectedRow, 1);
-        double score = (double) studentTable.getValueAt(selectedRow, 7);
+        int score = (int) studentTable.getValueAt(selectedRow, 7);
         
-        lblDetailTitle.setText(String.format("Detail Jawaban: %s (Nilai: %.2f)", studentName, score));
+        lblDetailTitle.setText(String.format("Detail Jawaban: %s (Nilai: %d)", studentName, score));
         
         // Load details in background
         new SwingWorker<List<DetailedAnswer>, Void>() {
             @Override
             protected List<DetailedAnswer> doInBackground() {
-                int siswaId = siswaAnswer_repo.getStudentIdByFinalScoreId(selectedFinalScoreId, NilaiForm.this);
-                if (siswaId > 0) {
-                    return siswaAnswer_repo.getStudentAnswers(siswaId, NilaiForm.this);
-                }
-                return List.of();
+                return siswaAnswer_repo.getStudentAnswers(selectedFinalScoreId, NilaiForm.this);
             }
 
             @Override

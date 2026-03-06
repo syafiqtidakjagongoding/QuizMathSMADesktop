@@ -48,7 +48,7 @@ public class OpeningForm extends JFrame {
         contentPanel.setBackground(Color.WHITE);
         contentPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(52, 73, 94), 4),
-                new EmptyBorder(50, 80, 50, 80)));
+                new EmptyBorder(30, 80, 30, 80)));
 
         // Icon user (optional - bisa diganti dengan foto siswa)
         JLabel iconLabel = new JLabel("👤");
@@ -68,15 +68,15 @@ public class OpeningForm extends JFrame {
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         contentPanel.add(iconLabel);
-        contentPanel.add(Box.createVerticalStrut(20));
+        contentPanel.add(Box.createVerticalStrut(10));
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createVerticalStrut(10));
         contentPanel.add(subtitleLabel);
-        contentPanel.add(Box.createVerticalStrut(40));
+        contentPanel.add(Box.createVerticalStrut(20));
 
         // Panel untuk data siswa
         JPanel dataPanel = new JPanel();
-        dataPanel.setLayout(new GridLayout(5, 2, 20, 20));
+        dataPanel.setLayout(new GridLayout(5, 2, 20, 10));
         dataPanel.setOpaque(false);
         dataPanel.setMaximumSize(new Dimension(700, 300));
 
@@ -138,7 +138,7 @@ public class OpeningForm extends JFrame {
         dataPanel.add(valJurusan);
 
         contentPanel.add(dataPanel);
-        contentPanel.add(Box.createVerticalStrut(50));
+        contentPanel.add(Box.createVerticalStrut(30));
 
         // Panel untuk tombol
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));

@@ -75,8 +75,7 @@ public class SoalForm extends JPanel {
         // Table Setup
         String[] columnNames = {
             "ID", "Question", "Image", "Answer Type", "Level", "Topic", 
-            "Correct Answer", "Answer A", "Answer A Img", "Answer B", "Answer B Img", 
-            "Answer C", "Answer C Img", "Answer D", "Answer D Img"
+            "Correct Answer", "Answer A", "Answer B", "Answer C", "Answer D"
         };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
@@ -86,7 +85,7 @@ public class SoalForm extends JPanel {
             }
             @Override
              public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 2 || columnIndex == 8 || columnIndex == 10 || columnIndex == 12 || columnIndex == 14) {
+                if (columnIndex == 2) {
                     return ImageIcon.class;
                 }
                 return Object.class;
@@ -138,7 +137,7 @@ public class SoalForm extends JPanel {
             }
         };
 
-        int[] imageCols = {2, 8, 10, 12, 14};
+        int[] imageCols = {2};
         for (int col : imageCols) {
             tabelSoal.getColumnModel().getColumn(col).setCellRenderer(imageRenderer);
         }
@@ -147,9 +146,9 @@ public class SoalForm extends JPanel {
         tabelSoal.getColumnModel().getColumn(3).setCellRenderer(new MultiLineCellRenderer());
         tabelSoal.getColumnModel().getColumn(5).setCellRenderer(new MultiLineCellRenderer());
         tabelSoal.getColumnModel().getColumn(7).setCellRenderer(new MultiLineCellRenderer());
+        tabelSoal.getColumnModel().getColumn(8).setCellRenderer(new MultiLineCellRenderer());
         tabelSoal.getColumnModel().getColumn(9).setCellRenderer(new MultiLineCellRenderer());
-        tabelSoal.getColumnModel().getColumn(11).setCellRenderer(new MultiLineCellRenderer());
-        tabelSoal.getColumnModel().getColumn(13).setCellRenderer(new MultiLineCellRenderer());
+        tabelSoal.getColumnModel().getColumn(10).setCellRenderer(new MultiLineCellRenderer());
         
          // Set preferred widths
         TableColumnModel columnModel = tabelSoal.getColumnModel();
@@ -175,7 +174,6 @@ public class SoalForm extends JPanel {
                      for (QuestionManipulation q : questions) {
                         StringBuilder correctAnswer = new StringBuilder();
                         String ansA="", ansB="", ansC="", ansD="";
-                        String imgA=null, imgB=null, imgC=null, imgD=null;
                         
                         // Map answers fixed to 4 columns if possible
                         // Assuming logic matches TambahSoalForm (A, B, C, D order)
@@ -183,10 +181,10 @@ public class SoalForm extends JPanel {
                              com.tugas.quizmath_player.entity.Answer a = q.answers.get(i);
                              if (a.correct) correctAnswer.append(a.label).append(", ");
                              
-                             if (i==0) { ansA = a.answer; imgA = a.image_answer; }
-                             else if (i==1) { ansB = a.answer; imgB = a.image_answer; }
-                             else if (i==2) { ansC = a.answer; imgC = a.image_answer; }
-                             else if (i==3) { ansD = a.answer; imgD = a.image_answer; }
+                             if (i==0) { ansA = a.answer; }
+                             else if (i==1) { ansB = a.answer; }
+                             else if (i==2) { ansC = a.answer; }
+                             else if (i==3) { ansD = a.answer; }
                          }
                         
                          Object[] row = {
@@ -197,10 +195,10 @@ public class SoalForm extends JPanel {
                             q.level,
                             q.topic,
                             correctAnswer.toString(),
-                            ansA, resizeImage(imgA, 100, 80),
-                            ansB, resizeImage(imgB, 100, 80),
-                            ansC, resizeImage(imgC, 100, 80),
-                            ansD, resizeImage(imgD, 100, 80),
+                             ansA,
+                            ansB,
+                            ansC,
+                            ansD,
                         };
                         tableModel.addRow(row);
                     }

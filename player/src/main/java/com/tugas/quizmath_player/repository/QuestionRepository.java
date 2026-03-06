@@ -69,8 +69,7 @@ public class QuestionRepository {
                             oa.getAnswer(),
                             oa.getLabel(),
                             oa.getScore(),
-                            oa.isCorrect(),
-                            oa.getImageAnswer()));
+                            oa.isCorrect()));
                 }
 
                 QuestionManipulation qm = new QuestionManipulation(
@@ -144,7 +143,6 @@ public class QuestionRepository {
                 oa.setScore(ans.score);
                 oa.setCorrect(ans.correct);
                 oa.setLabel(ans.label);
-                oa.setImageAnswer(ans.image_answer);
                 oa.setQuestion(q);
                 session.persist(oa);
             }
@@ -204,7 +202,6 @@ public class QuestionRepository {
                     oa.setScore(ans.score);
                     oa.setCorrect(ans.correct);
                     oa.setLabel(ans.label);
-                    oa.setImageAnswer(ans.image_answer);
 
                     q.addAnswer(oa); // managed by cascade
                     session.persist(oa);

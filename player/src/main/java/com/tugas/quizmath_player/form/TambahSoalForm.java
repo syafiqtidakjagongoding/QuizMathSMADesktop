@@ -243,7 +243,6 @@ public class TambahSoalForm extends JFrame {
                  AnswerPanel ap = answerPanels.get(i);
                  ap.setAnswerText(opt.getAnswer());
                  ap.setCorrect(opt.isCorrect());
-                 ap.setImagePath(opt.getImageAnswer());
             }
         }
     }
@@ -254,19 +253,21 @@ public class TambahSoalForm extends JFrame {
             return;
         }
 
-        // Validate at least one correct answer?
-        boolean hasCorrect = false;
+        // Validate at least one correct answer
+        int correctCount = 0;
         for (AnswerPanel ap : answerPanels) {
-            if (ap.isCorrect()) hasCorrect = true;
+            if (ap.isCorrect()) {
+                correctCount++;
+            }
         }
-        // Strict single choice or multiple? existing code implies multiple possible
-        // but typically one. Just warn if none.
-        if (!hasCorrect) {
-             int confirm = JOptionPane.showConfirmDialog(this, 
-                     "Belum ada jawaban benar yang dipilih. Lanjutkan?", 
-                     "Warning", JOptionPane.YES_NO_OPTION);
-             if (confirm == JOptionPane.NO_OPTION) return;
+
+        if (correctCount == 0) {
+            JOptionPane.showMessageDialog(this, "Centang minimal satu jawaban benar!", "Peringatan",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
+        String answerType = (correctCount > 1) ? "MULTIPLE_CHOICES" : "SINGLE_CHOICES";
 
         List<Answer> newAnswers = new ArrayList<>();
         for (AnswerPanel ap : answerPanels) {
@@ -275,8 +276,7 @@ public class TambahSoalForm extends JFrame {
                     ap.getAnswerText(),
                     ap.getLabel(), 
                     0, // score placeholder
-                    ap.isCorrect(),
-                    ap.getImagePath()
+                    ap.isCorrect()
             ));
         }
 
@@ -284,8 +284,8 @@ public class TambahSoalForm extends JFrame {
                 isEditMode ? questionId : 0,
                 txtQuestion.getText().trim(),
                 questionImagePath,
-                "pilihan ganda", // Default type
-                (String) cmbLevel.getSelectedItem(),
+                answerType,
+                        (String) cmbLevel.getSelectedItem(),
                 txtTopic.getText().trim(),
                 newAnswers
         );
@@ -304,8 +304,6 @@ public class TambahSoalForm extends JFrame {
         private String label;
         private JTextArea txtAnswer;
         private JCheckBox chkCorrect;
-        private JLabel lblImage;
-        private String imagePath;
 
         public AnswerPanel(String label) {
             this.label = label;
@@ -332,55 +330,19 @@ public class TambahSoalForm extends JFrame {
             gbc.gridx = 2; gbc.weightx = 0.1;
             chkCorrect = new JCheckBox("Benar");
             add(chkCorrect, gbc);
-
-            // Image Upload
-            gbc.gridx = 3; gbc.weightx = 0.25;
-            JPanel imgPanel = new JPanel(new BorderLayout());
-            
-            // Button panel for upload and delete
-            JPanel btnImgPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 2));
-            JButton btnUp = new JButton("Upload");
-            btnUp.addActionListener(e -> uploadAnswerImage());
-            JButton btnDelImg = new JButton("X");
-            btnDelImg.setBackground(new Color(231, 76, 60));
-            btnDelImg.setForeground(Color.WHITE);
-            btnDelImg.setPreferredSize(new Dimension(45, 25));
-            btnDelImg.addActionListener(e -> {
-                imagePath = null;
-                lblImage.setIcon(null);
-                lblImage.setText("");
-            });
-            btnImgPanel.add(btnUp);
-            btnImgPanel.add(btnDelImg);
-            
-            lblImage = new JLabel("", SwingConstants.CENTER);
-            lblImage.setPreferredSize(new Dimension(50, 50));
-            lblImage.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-            
-            imgPanel.add(btnImgPanel, BorderLayout.NORTH);
-            imgPanel.add(lblImage, BorderLayout.CENTER);
-            add(imgPanel, gbc);
-        }
-
-        private void uploadAnswerImage() {
-            JFileChooser fc = new JFileChooser();
-            fc.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                imagePath = fc.getSelectedFile().getAbsolutePath();
-                displayImage(lblImage, imagePath);
-            }
         }
 
         public String getLabel() { return label; }
         public String getAnswerText() { return txtAnswer.getText().trim(); }
-        public boolean isCorrect() { return chkCorrect.isSelected(); }
-        public String getImagePath() { return imagePath; }
+
+        public boolean isCorrect() {
+            return chkCorrect.isSelected();
+        }
 
         public void setAnswerText(String text) { txtAnswer.setText(text); }
-        public void setCorrect(boolean correct) { chkCorrect.setSelected(correct); }
-        public void setImagePath(String path) {
-            this.imagePath = path;
-            displayImage(lblImage, path);
+
+        public void setCorrect(boolean correct) {
+            chkCorrect.setSelected(correct);
         }
     }
 }

@@ -37,8 +37,8 @@ public class LoginForm extends JFrame {
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                 int w = getWidth();
                 int h = getHeight();
-                Color color1 = new Color(41, 128, 185);
-                Color color2 = new Color(109, 213, 250);
+                Color color1 = new Color(52, 152, 219);
+                Color color2 = new Color(41, 128, 185);
                 GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
                 g2d.setPaint(gp);
                 g2d.fillRect(0, 0, w, h);
@@ -275,7 +275,15 @@ public class LoginForm extends JFrame {
             // boolean checkLogin = true;
             if (checkLogin) {
                 Session.setAdminSession(username); // Set admin session
-                new DashboardForm().setVisible(true);
+
+                try {
+                    // Execute the admin module
+                    new DashboardForm().setVisible(true);
+                    this.dispose();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
                 this.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Username atau password tidak ditemukan", "User not found",

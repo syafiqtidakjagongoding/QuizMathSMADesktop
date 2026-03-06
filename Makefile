@@ -21,6 +21,9 @@ player:
 	@echo ">>> Running Player..."
 	@$(JAVA) -jar $(PLAYER_JAR)
 
+db:
+	docker compose up -d
+
 all:
 	@echo "Usage:"
 	@echo "  make player  -> build & run Player app"

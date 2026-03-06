@@ -26,8 +26,6 @@ public class OptionAnswer {
     @Column(name = "correct", nullable = false)
     private boolean correct;
 
-    @Column(name = "image_answer")
-    private String image_answer;
 
     @Column(name = "label")
     private String label;
@@ -39,12 +37,11 @@ public class OptionAnswer {
     public OptionAnswer() {
     }
 
-    public OptionAnswer(int id, String answer, int score, boolean correct, String image_answer) {
+    public OptionAnswer(int id, String answer, int score, boolean correct) {
         this.id = id;
         this.answer = answer;
         this.score = score;
         this.correct = correct;
-        this.image_answer = image_answer;
     }
 
     // Getters and Setters
@@ -80,13 +77,6 @@ public class OptionAnswer {
         this.correct = correct;
     }
 
-    public String getImageAnswer() {
-        return image_answer;
-    }
-
-    public void setImageAnswer(String image_answer) {
-        this.image_answer = image_answer;
-    }
 
     public String getLabel() {
         return label;

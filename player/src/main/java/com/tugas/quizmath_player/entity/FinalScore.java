@@ -33,6 +33,9 @@ public class FinalScore {
 	@Column(name = "final_score")
 	private double finalScore;
 
+	@Column(name = "created_at", insertable = false, updatable = false)
+	private java.sql.Timestamp createdAt;
+
 	public FinalScore() {
 	}
 
@@ -90,5 +93,13 @@ public class FinalScore {
 
 	public void setFinalScore(double finalScore) {
 		this.finalScore = finalScore;
+	}
+
+	public java.sql.Timestamp getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(java.sql.Timestamp createdAt) {
+		this.createdAt = createdAt;
 	}
 }

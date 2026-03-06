@@ -13,29 +13,26 @@ import java.util.List;
 
 public class SiswaAnswerRepository {
     
-    public List<DetailedAnswer> getStudentAnswers(int siswaId, Component parent) {
+    public List<DetailedAnswer> getStudentAnswers(int finalScoreId, Component parent) {
         List<DetailedAnswer> results = new ArrayList<>();
         
-        System.out.println("DEBUG: Getting answers for siswaId: " + siswaId);
         
         try (Session session = Database.getSessionFactory().openSession()) {
-            // Get all answers for this student with eager loading
+            // Get all answers for this score with eager loading
             String hql = "FROM SiswaAnswer sa " +
                         "LEFT JOIN FETCH sa.optionAnswer oa " +
                         "LEFT JOIN FETCH oa.question q " +
-                        "WHERE sa.siswa.id = :siswaId";
+                    "WHERE sa.finalScore.id = :finalScoreId";
             List<SiswaAnswer> siswaAnswers = session.createQuery(hql, SiswaAnswer.class)
-                    .setParameter("siswaId", siswaId)
+                    .setParameter("finalScoreId", finalScoreId)
                     .list();
             
-            System.out.println("DEBUG: Found " + siswaAnswers.size() + " answers");
             
             int questionNumber = 1;
             for (SiswaAnswer sa : siswaAnswers) {
                 OptionAnswer studentOption = sa.getOptionAnswer();
                 Question question = studentOption.getQuestion();
                 
-                System.out.println("DEBUG: Processing question " + questionNumber + ": " + question.getQuestionText());
                 
                 // Get the correct answer for this question
                 String correctAnswerText = "";
@@ -58,7 +55,6 @@ public class SiswaAnswerRepository {
                 results.add(detail);
             }
             
-            System.out.println("DEBUG: Returning " + results.size() + " detailed answers");
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,7 +69,6 @@ public class SiswaAnswerRepository {
     }
     
     public int getStudentIdByFinalScoreId(int finalScoreId, Component parent) {
-        System.out.println("DEBUG: Getting siswa ID for finalScoreId: " + finalScoreId);
         
         try (Session session = Database.getSessionFactory().openSession()) {
             // Use explicit join to avoid lazy loading issues
@@ -84,7 +79,6 @@ public class SiswaAnswerRepository {
                     .setParameter("id", finalScoreId)
                     .uniqueResult();
             
-            System.out.println("DEBUG: Found siswaId: " + siswaId);
             
             return siswaId != null ? siswaId : -1;
         } catch (Exception e) {
@@ -95,6 +89,33 @@ public class SiswaAnswerRepository {
                 "Error", 
                 JOptionPane.ERROR_MESSAGE);
             return -1;
+        }
+    }
+
+    public void saveStudentAnswers(List<SiswaAnswer> answers, Component parent) {
+        org.hibernate.Transaction tx = null;
+        try (Session session = Database.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+
+            for (SiswaAnswer sa : answers) {
+                String sql = "INSERT INTO siswa_answer (siswa_id, question_answer_id, final_score_id) VALUES (:siswaId, :optionId, :finalScoreId)";
+                session.createNativeQuery(sql)
+                        .setParameter("siswaId", sa.getSiswa().getId())
+                        .setParameter("optionId", sa.getOptionAnswer().getId())
+                        .setParameter("finalScoreId", sa.getFinalScore().getId())
+                        .executeUpdate();
+            }
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            System.err.println("ERROR in saveStudentAnswers: " + e.getMessage());
+            JOptionPane.showMessageDialog(parent,
+                    "Error saving student answers: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 }

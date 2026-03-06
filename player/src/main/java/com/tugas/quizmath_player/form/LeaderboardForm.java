@@ -17,6 +17,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import com.github.lgooddatepicker.components.DatePicker;
+import com.github.lgooddatepicker.components.DatePickerSettings;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -29,6 +31,7 @@ public class LeaderboardForm extends JPanel {
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
+    private DatePicker datePicker;
     private JButton btnRefresh;
 
     public LeaderboardForm() {
@@ -61,13 +64,21 @@ public class LeaderboardForm extends JPanel {
         });
         topPanel.add(txtSearch);
 
+        topPanel.add(new JLabel("Tanggal:"));
+        DatePickerSettings dateSettings = new DatePickerSettings();
+        dateSettings.setFormatForDatesCommonEra("yyyy-MM-dd");
+        dateSettings.setFormatForDatesBeforeCommonEra("yyyy-MM-dd");
+        datePicker = new DatePicker(dateSettings);
+        datePicker.addDateChangeListener(e -> searchTable());
+        topPanel.add(datePicker);
+
         btnRefresh = new JButton("Refresh");
         btnRefresh.addActionListener(e -> loadData());
         topPanel.add(btnRefresh);
 
         // Table
         String[] columnNames = {
-            "ID", "Rank", "Nama", "NIS", "Kelas", "Benar", "Salah", "Total Soal", "Nilai Akhir"
+                "ID", "Rank", "Nama", "NIS", "Kelas", "Benar", "Salah", "Total Soal", "Nilai Akhir", "Dibuat"
         };
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -134,7 +145,9 @@ public class LeaderboardForm extends JPanel {
                             l.correct_anwer,
                             l.wrong_anwer,
                             l.total_question,
-                            l.final_score
+                                 l.final_score,
+                                 new java.text.SimpleDateFormat("EEEE, dd MMMM yyyy", new java.util.Locale("id", "ID"))
+                                         .format(l.createdAt)
                         };
                         tableModel.addRow(row);
                     }
@@ -148,11 +161,25 @@ public class LeaderboardForm extends JPanel {
 
     private void searchTable() {
         String text = txtSearch.getText().trim();
-        if (text.length() == 0) {
+        java.time.LocalDate selectedDate = datePicker.getDate();
+
+        java.util.List<RowFilter<Object, Object>> filters = new java.util.ArrayList<>();
+
+        if (text.length() > 0) {
+            filters.add(RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(text), 2, 3));
+        }
+
+        if (selectedDate != null) {
+            String dateText = new java.text.SimpleDateFormat("EEEE, dd MMMM yyyy",
+                    java.util.Locale.forLanguageTag("id-ID"))
+                    .format(java.sql.Date.valueOf(selectedDate));
+            filters.add(RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(dateText), 9));
+        }
+
+        if (filters.isEmpty()) {
             sorter.setRowFilter(null);
         } else {
-            // Case insensitive search on Nama (2) and NIS (3)
-            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text, 2, 3));
+            sorter.setRowFilter(RowFilter.andFilter(filters));
         }
     }
 }

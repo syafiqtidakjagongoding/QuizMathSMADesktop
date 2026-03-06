@@ -89,7 +89,7 @@ public class FinalScoreRepository {
         }
     }
 
-    public void insertScore(Component parentComponent, int siswaId, int correctAnswer, int totalQuestion) {
+    public FinalScore insertScore(Component parentComponent, int siswaId, int correctAnswer, int totalQuestion) {
         Transaction tx = null;
         try (Session session = Database.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
@@ -97,23 +97,9 @@ public class FinalScoreRepository {
             int wrongAnswer = totalQuestion - correctAnswer;
             double finalScoreValue = ((double) correctAnswer / totalQuestion) * 100.0;
 
-            // Insert or Update FinalScore
-            String hqlFind = "FROM FinalScore fs WHERE fs.siswa.id = :sid";
-            FinalScore finalScore = session.createQuery(hqlFind, FinalScore.class)
-                    .setParameter("sid", siswaId)
-                    .uniqueResult();
-
-            if (finalScore == null) {
-                Siswa siswa = session.get(Siswa.class, siswaId);
-                finalScore = new FinalScore(siswa, correctAnswer, wrongAnswer, totalQuestion, finalScoreValue);
-                session.persist(finalScore);
-            } else {
-                finalScore.setCorrectAnswer(correctAnswer);
-                finalScore.setWrongAnswer(wrongAnswer);
-                finalScore.setTotalQuestion(totalQuestion);
-                finalScore.setFinalScore(finalScoreValue);
-                session.merge(finalScore);
-            }
+            Siswa siswa = session.get(Siswa.class, siswaId);
+            FinalScore finalScore = new FinalScore(siswa, correctAnswer, wrongAnswer, totalQuestion, finalScoreValue);
+            session.persist(finalScore);
 
             tx.commit();
 
@@ -122,6 +108,8 @@ public class FinalScoreRepository {
                     "Soal sudah terkirim!",
                     "Berhasil",
                     JOptionPane.INFORMATION_MESSAGE);
+
+            return finalScore;
 
         } catch (Exception e) {
             if (tx != null)
@@ -132,6 +120,7 @@ public class FinalScoreRepository {
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
+            return null;
         }
     }
 
@@ -152,7 +141,8 @@ public class FinalScoreRepository {
                         fs.getCorrectAnswer(),
                         fs.getWrongAnswer(),
                         fs.getTotalQuestion(),
-                        (int) fs.getFinalScore() // Cast to int as Leaderboard expects int
+                        (int) fs.getFinalScore(), // Cast to int as Leaderboard expects int
+                        fs.getCreatedAt()
                 );
                 leaderboard.add(lboard);
             }

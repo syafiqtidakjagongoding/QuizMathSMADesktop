@@ -7,6 +7,11 @@ import com.tugas.quizmath_player.entity.Answer;
 import com.tugas.quizmath_player.entity.QuestionManipulation;
 import com.tugas.quizmath_player.helper.Session;
 import com.tugas.quizmath_player.repository.FinalScoreRepository;
+import com.tugas.quizmath_player.repository.SiswaAnswerRepository;
+import com.tugas.quizmath_player.entity.FinalScore;
+import com.tugas.quizmath_player.entity.OptionAnswer;
+import com.tugas.quizmath_player.entity.Siswa;
+import com.tugas.quizmath_player.entity.SiswaAnswer;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -29,6 +34,7 @@ public class QuizQuestionSiswa extends JFrame {
 	private int totalTimeLeft = 600; // 10 menit dalam detik
 	private JProgressBar timeProgress;
 	private FinalScoreRepository fscore_repo;
+	private SiswaAnswerRepository siswaAnswer_repo;
 
 	// Data quiz
 	private String currentLevel = "MUDAH";
@@ -40,6 +46,7 @@ public class QuizQuestionSiswa extends JFrame {
 		this.question_repo = new QuestionRepository();
 		initializeQuestions(questions); // Load dummy questions
 		this.fscore_repo = new FinalScoreRepository();
+		this.siswaAnswer_repo = new SiswaAnswerRepository();
 		setTitle("Quiz Game - Pertanyaan");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -248,160 +255,6 @@ public class QuizQuestionSiswa extends JFrame {
 		}
 	}
 
-	// Method untuk load questions - sementara pakai dummy data
-	private List<QuizQuestion> loadFromDatabase() {
-		// List<QuizQuestion> dummyQuestions = new ArrayList<>();
-
-		// // Soal 1 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Apa ibu kota Indonesia?",
-		// new String[] { "Jakarta", "Bandung", "Surabaya", "Medan" },
-		// new boolean[] { true, false, false, false },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 2 - Multiple Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Pilih bilangan prima berikut: (Bisa lebih dari 1)",
-		// new String[] { "2", "4", "7", "9" },
-		// new boolean[] { true, false, true, false },
-		// "MULTIPLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 3 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Berapakah hasil dari 5 + 3 = ?",
-		// new String[] { "6", "7", "8", "9" },
-		// new boolean[] { false, false, true, false },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 4 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Planet terbesar di tata surya adalah?",
-		// new String[] { "Mars", "Jupiter", "Saturnus", "Neptunus" },
-		// new boolean[] { false, true, false, false },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 5 - Multiple Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Pilih bahasa pemrograman berikut: (Bisa lebih dari 1)",
-		// new String[] { "Java", "HTML", "Python", "CSS" },
-		// new boolean[] { true, false, true, false },
-		// "MULTIPLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 6 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Siapa presiden pertama Indonesia?",
-		// new String[] { "Soekarno", "Soeharto", "Habibie", "Megawati" },
-		// new boolean[] { true, false, false, false },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 7 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Berapakah hasil dari 12 x 12 = ?",
-		// new String[] { "124", "134", "144", "154" },
-		// new boolean[] { false, false, true, false },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 8 - Multiple Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Pilih negara di Asia Tenggara: (Bisa lebih dari 1)",
-		// new String[] { "Thailand", "Jepang", "Vietnam", "Korea" },
-		// new boolean[] { true, false, true, false },
-		// "MULTIPLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 9 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Apa simbol kimia untuk air?",
-		// new String[] { "H2O", "CO2", "O2", "N2" },
-		// new boolean[] { true, false, false, false },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// // Soal 10 - Single Choice
-		// dummyQuestions.add(new QuizQuestion(
-		// "Tahun kemerdekaan Indonesia adalah?",
-		// new String[] { "1942", "1943", "1944", "1945" },
-		// new boolean[] { false, false, false, true },
-		// "SINGLE_CHOICES",
-		// null,
-		// new String[] { null, null, null, null }));
-
-		// TODO: Nanti ganti dengan query ke database
-		// Contoh:
-		List<QuizQuestion> quizQuestions = new ArrayList<>();
-		try {
-			// Ambil data dari repository
-			List<QuestionManipulation> dbQuestions = question_repo.getAllQuestion(this);
-
-			// Filter berdasarkan level jika perlu
-			dbQuestions = dbQuestions.stream()
-					.filter(q -> q.level.equalsIgnoreCase(currentLevel))
-					.collect(Collectors.toList());
-
-			// Convert dari QuestionManipulation ke QuizQuestion
-			for (QuestionManipulation qm : dbQuestions) {
-				// Pastikan ada 4 jawaban
-				if (qm.answers == null || qm.answers.size() < 4) {
-					continue; // Skip soal yang tidak lengkap
-				}
-
-				// Ambil 4 jawaban pertama
-				String[] answerTexts = new String[4];
-				boolean[] correctAnswers = new boolean[4];
-				String[] answerImages = new String[4];
-
-				for (int i = 0; i < 4 && i < qm.answers.size(); i++) {
-					Answer ans = qm.answers.get(i);
-					answerTexts[i] = ans.answer;
-					correctAnswers[i] = ans.correct;
-					answerImages[i] = ans.image_answer;
-				}
-
-			
-				// Buat QuizQuestion
-				QuizQuestion qq = new QuizQuestion(
-						qm.question_text,
-						answerTexts,
-						correctAnswers,
-						qm.answer_type,
-						qm.question_image,
-						answerImages);
-
-				quizQuestions.add(qq);
-			}
-
-			// Shuffle questions
-			Collections.shuffle(quizQuestions);
-
-			return quizQuestions;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,
-					"Gagal memuat soal dari database: " + e.getMessage(),
-					"Error",
-					JOptionPane.ERROR_MESSAGE);
-		}
-		// return dummyQuestions;
-		return quizQuestions;
-	}
-
 	private void loadQuestion() {
 		if (currentQuestionIndex < 0 || currentQuestionIndex >= questions.size()) {
 			return;
@@ -428,18 +281,10 @@ public class QuizQuestionSiswa extends JFrame {
 
 		// Set jawaban
 		for (int i = 0; i < 4; i++) {
-			if (q.answerImagePaths[i] != null && !q.answerImagePaths[i].isEmpty()) {
-				// Jika ada gambar
-				ImageIcon icon = new ImageIcon(q.answerImagePaths[i]);
-				Image scaled = icon.getImage().getScaledInstance(150, 100, Image.SCALE_SMOOTH);
-				answerLabels[i].setIcon(new ImageIcon(scaled));
-				answerLabels[i].setText("");
-			} else {
-				// Jika hanya teks
-				answerLabels[i].setIcon(null);
-				answerLabels[i].setText("<html><div style='text-align: center; width: 200px;'>" +
-						q.answers[i] + "</div></html>");
-			}
+			// Jika hanya teks
+			answerLabels[i].setIcon(null);
+			answerLabels[i].setText("<html><div style='text-align: center; width: 200px;'>" +
+					q.answers[i] + "</div></html>");
 
 			// Reset checkbox
 			answerCheckBoxes[i].setSelected(false);
@@ -638,40 +483,87 @@ public class QuizQuestionSiswa extends JFrame {
 	private void submitQuiz() {
 		saveCurrentAnswer();
 
-		int option = JOptionPane.showConfirmDialog(this,
-				"Apakah Anda yakin ingin submit quiz?",
-				"Konfirmasi Submit",
-				JOptionPane.YES_NO_OPTION);
+		// Hitung soal yang belum dijawab
+		int unansweredCount = 0;
+		for (int i = 0; i < questions.size(); i++) {
+			// userAnswers.get(i) bernilai 0 jika tidak ada opsi yang dipilih
+			if (userAnswers.get(i) == 0) {
+				unansweredCount++;
+			}
+		}
 
-		if (option == JOptionPane.YES_OPTION) {
-			globalTimer.stop();
+		if (unansweredCount > 0) {
+			int option = JOptionPane.showConfirmDialog(this,
+					"Ada " + unansweredCount + " soal yang belum dijawab.\nApakah Anda yakin ingin submit quiz?",
+					"Peringatan",
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.WARNING_MESSAGE);
+			if (option != JOptionPane.YES_OPTION) {
+				return;
+			}
+		} else {
+			int option = JOptionPane.showConfirmDialog(this,
+					"Apakah Anda yakin ingin submit quiz?",
+					"Konfirmasi Submit",
+					JOptionPane.YES_NO_OPTION);
+			if (option != JOptionPane.YES_OPTION) {
+				return;
+			}
+		}
+		globalTimer.stop();
 
-			// Hitung jawaban benar
-			int correctAnswers = 0;
+		// Hitung jawaban benar
+		int correctAnswers = 0;
+		for (int i = 0; i < questions.size(); i++) {
+			QuizQuestion q = questions.get(i);
+			int userAnswer = userAnswers.get(i);
+
+			// Cek jawaban benar
+			int correctAnswer = 0;
+			for (int j = 0; j < 4; j++) {
+				if (q.correctAnswers[j]) {
+					correctAnswer |= (1 << j);
+				}
+			}
+
+			if (userAnswer == correctAnswer) {
+				correctAnswers++;
+			}
+		}
+
+		int siswaId = Session.getCurrentSiswaId();
+
+		FinalScore finalScore = this.fscore_repo.insertScore(rootPane, siswaId, correctAnswers, questions.size());
+
+		if (finalScore != null) {
+			List<SiswaAnswer> answersToSave = new ArrayList<>();
+			Siswa siswa = new Siswa();
+			siswa.setId(siswaId);
+
 			for (int i = 0; i < questions.size(); i++) {
 				QuizQuestion q = questions.get(i);
 				int userAnswer = userAnswers.get(i);
 
-				// Cek jawaban benar
-				int correctAnswer = 0;
+				// Iterate over the 4 options to see which bits are set
 				for (int j = 0; j < 4; j++) {
-					if (q.correctAnswers[j]) {
-						correctAnswer |= (1 << j);
+					if ((userAnswer & (1 << j)) != 0 && q.optionIds[j] > 0) {
+						OptionAnswer optionAnswer = new OptionAnswer();
+						optionAnswer.setId(q.optionIds[j]);
+						
+						SiswaAnswer sa = new SiswaAnswer(siswa, optionAnswer, finalScore);
+						answersToSave.add(sa);
 					}
-				}
-
-				if (userAnswer == correctAnswer) {
-					correctAnswers++;
 				}
 			}
 
-			int siswaId = Session.getCurrentSiswaId();
-
-			this.fscore_repo.insertScore(rootPane, siswaId, correctAnswers, questions.size());
-			// Tampilkan hasil
-			new QuizResultForm(currentLevel, questions.size(), correctAnswers).setVisible(true);
-			this.dispose();
+			if (!answersToSave.isEmpty()) {
+				siswaAnswer_repo.saveStudentAnswers(answersToSave, rootPane);
+			}
 		}
+
+		// Tampilkan hasil
+		new QuizResultForm(currentLevel, questions.size(), correctAnswers).setVisible(true);
+		this.dispose();
 	}
 
 	// Method untuk set level dan total waktu dari luar
@@ -700,20 +592,23 @@ public class QuizQuestionSiswa extends JFrame {
 
 // Class untuk menyimpan data pertanyaan
 class QuizQuestion {
+	int questionId;
 	String questionText;
 	String[] answers;
 	boolean[] correctAnswers;
+	int[] optionIds;
 	String answerType; // "SINGLE_CHOICES" atau "MULTIPLE_CHOICES"
 	String questionImagePath;
-	String[] answerImagePaths;
 
-	public QuizQuestion(String questionText, String[] answers, boolean[] correctAnswers,
-			String answerType, String questionImagePath, String[] answerImagePaths) {
+	public QuizQuestion(int questionId, String questionText, String[] answers, boolean[] correctAnswers,
+			int[] optionIds,
+			String answerType, String questionImagePath) {
+		this.questionId = questionId;
 		this.questionText = questionText;
 		this.answers = answers;
 		this.correctAnswers = correctAnswers;
+		this.optionIds = optionIds;
 		this.answerType = answerType;
 		this.questionImagePath = questionImagePath;
-		this.answerImagePaths = answerImagePaths;
 	}
 }

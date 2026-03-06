@@ -17,9 +17,11 @@ public class Leaderboard {
     public int wrong_anwer;
     public int total_question;
     public int final_score;
+    public java.sql.Timestamp createdAt;
 
      // Constructor lengkap
-    public Leaderboard(int id, String siswa, String nis, String kelas, int correct_anwer, int wrong_anwer, int total_question, int final_score) {
+     public Leaderboard(int id, String siswa, String nis, String kelas, int correct_anwer, int wrong_anwer,
+             int total_question, int final_score, java.sql.Timestamp createdAt) {
         this.id = id;
         this.siswa = siswa;
         this.nis = nis;
@@ -28,5 +30,6 @@ public class Leaderboard {
         this.wrong_anwer = wrong_anwer;
         this.total_question = total_question;
         this.final_score = final_score;
+        this.createdAt = createdAt;
     }
 }
